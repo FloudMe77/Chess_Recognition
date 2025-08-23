@@ -1,0 +1,67 @@
+# ======================
+# Globalne systemowe
+# ======================
+.DS_Store
+Thumbs.db
+
+# ======================
+# Python (server/)
+# ======================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# wirtualne środowiska
+.venv/
+venv/
+ENV/
+env/
+
+# paczki i buildy
+*.egg-info/
+dist/
+build/
+
+# bazy danych
+*.db
+*.sqlite3
+
+# YOLO modele i wyniki
+*.pt
+*.onnx
+*.weights
+*.txt
+*.jpg
+*.png
+*.mp4
+runs/
+data/
+datasets/
+
+# pliki konfiguracyjne (nie commitujemy prywatnych)
+.env
+server/.env
+
+# ======================
+# Android (android/)
+# ======================
+*.iml
+.gradle/
+.idea/
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+*.apk
+*.ap_
+
+# Android Studio cache/konfiguracja
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml

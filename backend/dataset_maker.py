@@ -1,0 +1,30 @@
+import os
+import chess_recognision_model
+import cv2
+
+class DatasetMaker():
+    def __init__(self, model_board_path, model_pieces_path):
+        self.chess_recognision_model = chess_recognision_model(model_board_path, model_pieces_path)
+        
+    def _create_label_file(self, image, position_dict):
+        prediction_results = self.chess_recognision_model.recognice_position(image)
+        lines=""
+        for prediction_piece in prediction_results:
+            position = prediction_piece["position"]
+            x_min, y_min, x_max, y_max = prediction_piece["bbox"]
+            if position in position_dict:
+                lines += f"{position_dict[position]} {(x_max + x_min)/2} {(y_max + y_min)/2} {x_max-x_min} {y_max-y_min}\n"
+        return lines
+
+    def create_dataset(self, folder_path, position_name, position_dict):
+        image_folder = folder_path+"/images/train"
+        labels_folder = folder_path+"/labels/train"
+        for file_name in os.listdir(image_folder):
+            if position_name in file_name:
+
+                image = cv2.imread(image_folder +"/" + file_name)
+                label_path = labels_folder + "/"+ file_name.replace("jpg", "txt")
+                lines = self._create_label_file(image, position_dict)
+                os.makedirs(os.path.dirname(label_path), exist_ok=True)
+                with open(label_path, 'w') as f:
+                    f.write(lines)

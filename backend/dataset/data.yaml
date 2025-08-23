@@ -1,0 +1,18 @@
+train: images/train
+val: images/val
+test: images/test 
+
+nc: 12
+names:
+  - white-pawn #0
+  - white-rook #1
+  - white-knight #2
+  - white-bishop #3
+  - white-queen #4
+  - white-king #5
+  - black-pawn #6
+  - black-rook #7
+  - black-knight #8
+  - black-bishop #9 
+  - black-queen #10
+  - black-king #11
