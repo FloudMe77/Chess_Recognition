@@ -85,6 +85,7 @@ dependencies {
     implementation("androidx.media3:media3-common-ktx:1.8.0")
     implementation("androidx.test.espresso:espresso-core:3.6.1")
     implementation("androidx.room:room-runtime-android:2.7.2")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

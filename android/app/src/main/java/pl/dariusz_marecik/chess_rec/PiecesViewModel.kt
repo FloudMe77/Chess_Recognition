@@ -4,6 +4,7 @@ import WebSocketClient
 import WebSocketManager
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
@@ -12,7 +13,7 @@ import pl.dariusz_marecik.chess_rec.BuildConfig
 
 
 class PiecesViewModel: ViewModel() {
-    private val manager = WebSocketManager(BuildConfig.WEBSOCKET_IP)
+    private val manager = WebSocketManager("ws://192.168.0.21:8765/ws")
     private var _moveList = MutableStateFlow<List<Move>>(listOf())
     val moveList: StateFlow<List<Move>> = _moveList.asStateFlow()
 
@@ -34,5 +35,8 @@ class PiecesViewModel: ViewModel() {
     }
     fun getLatestMove(): Move? {
         return _moveList.value.lastOrNull()
+    }
+    fun getConnectionStatus(): StateFlow<Boolean> {
+        return manager.getConnectionStatus()
     }
 }

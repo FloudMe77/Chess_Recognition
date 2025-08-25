@@ -1,5 +1,6 @@
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import pl.dariusz_marecik.chess_rec.PieceInfo
@@ -28,5 +29,8 @@ class WebSocketManager(private val url: String) {
 
     fun getPieces(): StateFlow<Map<Pair<Int, Int>, PieceInfo>> {
         return webSocketClient.piecesMap
+    }
+    fun getConnectionStatus(): StateFlow<Boolean> {
+        return webSocketClient.isConnected
     }
 }

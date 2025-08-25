@@ -26,11 +26,13 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
     }
 
     private var previousPieces: Map<Pair<Int, Int>,PieceInfo> = startPieces
-    private var onMove: ColorTeam = ColorTeam.WHITE
+    var onMove: ColorTeam = ColorTeam.WHITE
+        private set
 
     private var enPassant: Pair<Int, Int>? = null
     private var potentialNewPieces: Map<Pair<Int, Int>,PieceInfo> = startPieces
     var potentialNewMove: Move? = null
+        private set
 
     fun considerNewPosition(newPieces: Map<Pair<Int, Int>, PieceInfo>) {
         Log.d("PositionManager", "Otrzymałem newPieces: $newPieces")

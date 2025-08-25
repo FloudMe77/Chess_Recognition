@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
         requestPermissions(arrayOf(Manifest.permission.CAMERA), 0)
 
         setContent {
-            CameraApp(applicationContext)
+            MainApp(applicationContext)
         }
 
 
@@ -147,177 +147,17 @@ class MainActivity : ComponentActivity() {
         viewModel.restartListMove()
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun CameraApp(applicationContext: Context) {
-        val positionManager = remember { mutableStateOf<PositionManager?>(null) }
-        val scope = rememberCoroutineScope()
-        var showDialog by remember { mutableStateOf(false) }
-        var gameUrl by remember { mutableStateOf("") }
-        val context = LocalContext.current
-        val startPosition = remember { mutableStateOf<Map<Pair<Int, Int>, PieceInfo>?>(null) }
-        val gameStarted = remember { mutableStateOf(false) }
-        val scaffoldState = rememberBottomSheetScaffoldState()
-        val controller = remember {
-            LifecycleCameraController(applicationContext).apply {
-                setEnabledUseCases(
-                    CameraController.IMAGE_CAPTURE or
-                            CameraController.VIDEO_CAPTURE
-                )
-            }
-        }
+    fun MainApp(applicationContext: Context) {
+        val isCameraView = remember { mutableStateOf(false) }
         val viewModel = viewModel<PiecesViewModel>()
-        val piecesFlow = remember(positionManager.value, gameStarted.value) {
-            if (gameStarted.value && positionManager.value != null) {
-                positionManager.value!!.piecesMap
-            } else {
-                viewModel.pieces
-            }
+        if(isCameraView.value){
+            CameraApp(applicationContext, isCameraView, viewModel)
+        }
+        else{
+            ClockApp(isCameraView, viewModel)
         }
 
-        val pieces by piecesFlow.collectAsState()
-        val piecesFollow by viewModel.pieces.collectAsState()
-
-
-        Column(Modifier.fillMaxSize()) {
-            BoardContent(
-                pieces,
-                modifier = Modifier.weight(1f),
-                viewModel.getLatestMove(),
-                positionManager.value?.potentialNewMove
-            )
-            Box(modifier = Modifier.weight(4f))
-            {
-
-                BottomSheetScaffold(
-                    scaffoldState = scaffoldState,
-                    sheetPeekHeight = 0.dp,
-                    sheetContent = {
-                        PhotoBottomSheetContent(
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    },
-                ) { padding ->
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                    ) {
-                        CameraPreview(
-                            controller = controller,
-                            modifier = Modifier.fillMaxSize()
-                        )
-
-                        IconButton(
-                            onClick = {
-                                controller.cameraSelector =
-                                    if (controller.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
-                                        CameraSelector.DEFAULT_FRONT_CAMERA
-                                    } else {
-                                        CameraSelector.DEFAULT_BACK_CAMERA
-                                    }
-                            },
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(16.dp)
-                        ) {
-                            Icon(Icons.Default.Settings, contentDescription = "Switch camera")
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 32.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            IconButton(
-                                onClick = {onRestartClick(gameStarted, positionManager, startPosition, viewModel)},
-                                modifier = Modifier
-                                    .size(60.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Restart",
-                                    modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                            // Duży przycisk Play
-                            Button(
-                                onClick = {
-                                    onPlayClick(gameStarted, viewModel, positionManager, controller, startPosition)
-                                },
-                                modifier = Modifier.size(100.dp),
-                                shape = CircleShape
-                            ) {
-                                Icon(
-                                    Icons.Default.PlayArrow,
-                                    contentDescription = "Play",
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
-
-                            IconButton(
-                                onClick = {
-                                    val pgn = PgnExporter.export(viewModel.moveList.value, startPosition.value!!)
-                                    LichessConverter.importPgnToLichess(pgn) { url ->
-                                        if (url != null) {
-                                            gameUrl = url
-                                            showDialog = true
-                                        }
-                                    }
-                                },
-                                modifier = Modifier
-                                    .size(60.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = "Save",
-                                    modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
-                    }
-                }
-                }
-            }
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                confirmButton = {
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("OK")
-                    }
-                },
-                title = { Text("Link do partii") },
-                text = {
-                    ClickableText(
-                        text = AnnotatedString(gameUrl),
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(gameUrl))
-                            context.startActivity(intent)
-                        }
-                    )
-                }
-            )
-        }
-            LaunchedEffect(positionManager.value, piecesFollow) {
-                positionManager.value?.considerNewPosition(piecesFollow)
-            }
-            LaunchedEffect(controller) {
-                while (isActive) {
-                    try {
-                        takePhoto(
-                            controller = controller,
-                            viewModel
-                        )
-                    } catch (e: Exception) {
-                        Log.d("CameraProblem", e.message.toString());
-                    }
-                    delay(1000)
-                }
-            }
 
         }
 

@@ -3,6 +3,9 @@ import okhttp3.*
 import okio.ByteString
 import com.google.gson.Gson
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.google.gson.reflect.TypeToken
 import io.ktor.client.network.sockets.*
 import kotlinx.coroutines.*
@@ -19,7 +22,8 @@ class WebSocketClient : WebSocketListener() {
         .build()
 
     private lateinit var webSocket: WebSocket
-    private var isRunning = false
+    private val _isConnected = MutableStateFlow(false)
+    val isConnected: StateFlow<Boolean> = _isConnected
 
     private var _piecesMap = MutableStateFlow<Map<Pair<Int, Int>, PieceInfo>>(emptyMap())
     val piecesMap: StateFlow<Map<Pair<Int, Int>, PieceInfo>> = _piecesMap.asStateFlow()
@@ -28,15 +32,15 @@ class WebSocketClient : WebSocketListener() {
 
     fun startWithRetry(url: String){
         scope.launch {
-            while (!isRunning) {
+            while (!_isConnected.value) {
                 Log.d("WebSocket", "Trying to connect")
                 try {
                     connect(url)
                 }
-                catch (e: SocketTimeoutException){
+                catch (_: SocketTimeoutException){
 
                 }
-                delay(1000)
+                delay(10000)
             }
         }
     }
@@ -57,7 +61,7 @@ class WebSocketClient : WebSocketListener() {
     }
 
     fun sendImage(bitmap: Bitmap) {
-        if (isRunning){
+        if (_isConnected.value){
             val scaledBitmap = scaleBitmap(bitmap, 640)
             val stream = ByteArrayOutputStream()
             scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
@@ -69,18 +73,18 @@ class WebSocketClient : WebSocketListener() {
     }
 
     fun disconnect() {
-        isRunning = false
+        _isConnected.value = false
         scope.cancel()
         webSocket.close(1000, "Normal close")
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         Log.d("WebSocket", "Connected to server")
-        isRunning = true
+        _isConnected.value = true
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        if (isRunning) {
+        if (_isConnected.value) {
             try {
                 val listType = object : TypeToken<List<PieceInfo>>() {}.type
                 val piecesList: List<PieceInfo> = gson.fromJson(text, listType)
@@ -101,7 +105,7 @@ class WebSocketClient : WebSocketListener() {
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        isRunning = false
+        _isConnected.value = false
         Log.e("WebSocket", "Connection failed: ${t.message}", t)
         scope.launch {
             delay(1000) // np. 2 sekundy przerwy
@@ -115,5 +119,14 @@ class WebSocketClient : WebSocketListener() {
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         Log.d("WebSocket", "Disconnected: $code / $reason")
+        _isConnected.value = false
+        scope.launch {
+            delay(1000) // np. 2 sekundy przerwy
+            try {
+                connect(webSocket.request().url.toString())
+            } catch (e: Exception) {
+                Log.e("WebSocket", "Retry failed: ${e.message}")
+            }
+        }
     }
 }
