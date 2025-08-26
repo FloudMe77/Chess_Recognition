@@ -9,51 +9,60 @@ import java.lang.reflect.Modifier.PRIVATE
 import kotlin.collections.minus
 import kotlin.math.abs
 
-class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
-    private var _piecesMap = MutableStateFlow<Map<Pair<Int, Int>, PieceInfo>>(emptyMap())
-    val piecesMap: StateFlow<Map<Pair<Int, Int>, PieceInfo>> = _piecesMap.asStateFlow()
+class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>) {
+    private var _positionToDraw = MutableStateFlow<Map<Pair<Int, Int>, PieceInfo>>(emptyMap())
+    val positionToDraw: StateFlow<Map<Pair<Int, Int>, PieceInfo>> = _positionToDraw.asStateFlow()
 
-    private var _isPositionReady = MutableStateFlow(false)
-    val isPositionReady: StateFlow<Boolean> = _isPositionReady.asStateFlow()
+    private var _isMoveFound = MutableStateFlow(false)
+    val isMoveFound: StateFlow<Boolean> = _isMoveFound.asStateFlow()
 
     private val castleMap: Map<ColorTeam, CastleInfo>
     init {
-        _piecesMap.value = startPieces
+        _positionToDraw.value = startPosition
         castleMap = mapOf(
             ColorTeam.WHITE to CastleInfo(),
             ColorTeam.BLACK to CastleInfo()
         )
     }
 
-    private var previousPieces: Map<Pair<Int, Int>,PieceInfo> = startPieces
+    private var previousPosition: Map<Pair<Int, Int>,PieceInfo> = startPosition
     var onMove: ColorTeam = ColorTeam.WHITE
         private set
 
     private var enPassant: Pair<Int, Int>? = null
-    private var potentialNewPieces: Map<Pair<Int, Int>,PieceInfo> = startPieces
+    private var potentialNewPosition: Map<Pair<Int, Int>,PieceInfo> = startPosition
     var potentialNewMove: Move? = null
         private set
 
-    fun considerNewPosition(newPieces: Map<Pair<Int, Int>, PieceInfo>) {
-        Log.d("PositionManager", "Otrzymałem newPieces: $newPieces")
-        val fromPositions = previousPieces.keys - newPieces.keys
-        val toPositions = newPieces.keys - previousPieces.keys
-        Log.d("PositionManager", "fromPositions: $fromPositions, toPositions: $toPositions")
+    fun considerNewPosition(detectedPosition: Map<Pair<Int, Int>, PieceInfo>) {
+        Log.d("PositionManager", "Otrzymałem newPieces: $detectedPosition")
+        val fromCordsSet = previousPosition.keys - detectedPosition.keys
+        val toCordsSet = detectedPosition.keys - previousPosition.keys
+        Log.d("PositionManager", "fromPositions: $fromCordsSet, toPositions: $toCordsSet")
         Log.d("PositionManager", "onMove: $onMove")
 
-        val potentialMove = findLegalMove(fromPositions, toPositions, newPieces) ?: return
+        if(fromCordsSet.isEmpty() && toCordsSet.isEmpty()) {
+            // undo changes
+            potentialNewMove = null
+            _isMoveFound.value = false
+            potentialNewPosition = previousPosition
+            _positionToDraw.value = previousPosition
+        }
+
+        val potentialMove = findLegalMove(fromCordsSet, toCordsSet, detectedPosition) ?: return
 
         val (from, to, label) = potentialMove
+        //
         val newPosition: MutableMap<Pair<Int, Int>, PieceInfo> =
-            previousPieces.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
+            previousPosition.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
 
         fun applyMove(piece: PieceInfo, update: () -> Unit) {
             update()
             if (!isKingAttacked(newPosition)) {
-                _isPositionReady.value = true
-                potentialNewPieces = newPosition
+                _isMoveFound.value = true
+                potentialNewPosition = newPosition
                 potentialNewMove = Move(from, to, piece.name, label)
-                _piecesMap.value = newPosition
+                _positionToDraw.value = newPosition
             }
         }
 
@@ -105,9 +114,9 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun findLegalMove(
-        fromPosition: Set<Pair<Int, Int>>,
-        toPosition: Set<Pair<Int, Int>>,
-        afterPieces: Map<Pair<Int, Int>, PieceInfo>
+        fromCordsSet: Set<Pair<Int, Int>>,
+        toCordsSet: Set<Pair<Int, Int>>,
+        detectedPosition: Map<Pair<Int, Int>, PieceInfo>
     ): Triple<Pair<Int, Int>, Pair<Int, Int>, Action>? {
 
         fun pawnPromotion(piece: PieceInfo, to: Pair<Int, Int>) =
@@ -115,27 +124,27 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
                     (piece.name == PieceKind.BLACK_PAWN && to.second == 0)
 
         // Castling
-        if (fromPosition.size == 2 && toPosition.size == 2) {
+        if (fromCordsSet.size == 2 && toCordsSet.size == 2) {
             val (wantedRook, wantedKing, row) = when (onMove) {
                 ColorTeam.WHITE -> Triple(PieceKind.WHITE_ROOK, PieceKind.WHITE_KING, 0)
                 ColorTeam.BLACK -> Triple(PieceKind.BLACK_ROOK, PieceKind.BLACK_KING, 7)
             }
-            val kingPos = fromPosition.firstOrNull { previousPieces[it]?.name == wantedKing }
-            val rookPos = fromPosition.firstOrNull { previousPieces[it]?.name == wantedRook }
+            val kingPos = fromCordsSet.firstOrNull { previousPosition[it]?.name == wantedKing }
+            val rookPos = fromCordsSet.firstOrNull { previousPosition[it]?.name == wantedRook }
 
             if (kingPos == Pair(4, row) && rookPos != null) {
-                val rook = previousPieces[rookPos]
+                val rook = previousPosition[rookPos]
                 val leftCastle = castleMap[onMove]?.left == true &&
                         rookPos == Pair(0, row) &&
-                        toPosition == setOf(Pair(2,row), Pair(3,row))
+                        toCordsSet == setOf(Pair(2,row), Pair(3,row))
                 val rightCastle = castleMap[onMove]?.right == true &&
                         rookPos == Pair(7, row) &&
-                        toPosition == setOf(Pair(5,row), Pair(6,row))
+                        toCordsSet == setOf(Pair(5,row), Pair(6,row))
                 if (rook != null) {
                     when {
-                        leftCastle && rook.movement.validateMove(Pair(0,row), Pair(3,row), previousPieces, onMove) ->
+                        leftCastle && rook.movement.validateMove(Pair(0,row), Pair(3,row), previousPosition, onMove) ->
                             return Triple(kingPos, Pair(2,row), Action.CASTLE_LEFT)
-                        rightCastle && rook.movement.validateMove(Pair(7,row), Pair(5,row), previousPieces, onMove) ->
+                        rightCastle && rook.movement.validateMove(Pair(7,row), Pair(5,row), previousPosition, onMove) ->
                             return Triple(kingPos, Pair(6,row), Action.CASTLE_RIGHT)
                     }
                 }
@@ -143,25 +152,25 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
         }
 
         // Regular move
-        if (fromPosition.size == 1 && toPosition.size == 1) {
-            val from = fromPosition.single()
-            val to = toPosition.single()
-            val piece = previousPieces[from]
-            if (piece != null && !previousPieces.containsKey(to) && piece.color == onMove &&
-                piece.movement.validateMove(from, to, previousPieces, piece.color)) {
+        if (fromCordsSet.size == 1 && toCordsSet.size == 1) {
+            val from = fromCordsSet.single()
+            val to = toCordsSet.single()
+            val piece = previousPosition[from]
+            if (piece != null && !previousPosition.containsKey(to) && piece.color == onMove &&
+                piece.movement.validateMove(from, to, previousPosition, piece.color)) {
                 return if (pawnPromotion(piece, to)) Triple(from, to, Action.PROMOTION)
                 else Triple(from, to, Action.MOVE)
             }
         }
 
         // Capture move
-        if (fromPosition.size == 1 && toPosition.isEmpty()) {
-            val from = fromPosition.single()
-            previousPieces[from]?.let { piece ->
+        if (fromCordsSet.size == 1 && toCordsSet.isEmpty()) {
+            val from = fromCordsSet.single()
+            previousPosition[from]?.let { piece ->
                 if(piece.color == onMove){
-                    val possibleTakes = piece.movement.possibleTake(from, previousPieces, piece.color)
+                    val possibleTakes = piece.movement.possibleTake(from, previousPosition, piece.color)
                     possibleTakes.firstOrNull { pos ->
-                        previousPieces[pos]?.color != afterPieces[pos]?.color
+                        previousPosition[pos]?.color != detectedPosition[pos]?.color
                     }?.let { capturePos ->
                         return if (pawnPromotion(piece, capturePos)) Triple(from, capturePos, Action.PROMOTION)
                         else Triple(from, capturePos, Action.TAKE)
@@ -172,11 +181,11 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
         }
 
         // En passant
-        if (fromPosition.size == 2 && toPosition.size == 1) {
-            val listFrom = fromPosition.toList()
-            val to = toPosition.single()
-            val whitePawn = listFrom.find { previousPieces[it]?.name == PieceKind.WHITE_PAWN }
-            val blackPawn = listFrom.find { previousPieces[it]?.name == PieceKind.BLACK_PAWN }
+        if (fromCordsSet.size == 2 && toCordsSet.size == 1) {
+            val listFrom = fromCordsSet.toList()
+            val to = toCordsSet.single()
+            val whitePawn = listFrom.find { previousPosition[it]?.name == PieceKind.WHITE_PAWN }
+            val blackPawn = listFrom.find { previousPosition[it]?.name == PieceKind.BLACK_PAWN }
 
             if (whitePawn != null && blackPawn != null) {
                 val diff = blackPawn - whitePawn
@@ -212,23 +221,23 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
             when (pieceKind) {
                 PieceKind.WHITE_ROOK -> {
                     when (from) {
-                        Pair(0, 0) -> castleMap.get(ColorTeam.WHITE)?.left = false
-                        Pair(7, 0) -> castleMap.get(ColorTeam.WHITE)?.right = false
+                        Pair(0, 0) -> castleMap[ColorTeam.WHITE]?.left = false
+                        Pair(7, 0) -> castleMap[ColorTeam.WHITE]?.right = false
                     }
                 }
                 PieceKind.BLACK_ROOK -> {
                     when (from) {
-                        Pair(0, 7) -> castleMap.get(ColorTeam.BLACK)?.left = false
-                        Pair(7, 7) -> castleMap.get(ColorTeam.BLACK)?.right = false
+                        Pair(0, 7) -> castleMap[ColorTeam.BLACK]?.left = false
+                        Pair(7, 7) -> castleMap[ColorTeam.BLACK]?.right = false
                     }
                 }
                 PieceKind.WHITE_KING -> {
-                    castleMap.get(ColorTeam.WHITE)?.left = false
-                    castleMap.get(ColorTeam.WHITE)?.right = false
+                    castleMap[ColorTeam.WHITE]?.left = false
+                    castleMap[ColorTeam.WHITE]?.right = false
                 }
                 PieceKind.BLACK_KING -> {
-                    castleMap.get(ColorTeam.BLACK)?.left = false
-                    castleMap.get(ColorTeam.BLACK)?.right = false
+                    castleMap[ColorTeam.BLACK]?.left = false
+                    castleMap[ColorTeam.BLACK]?.right = false
                 }
                 else -> {}
             }
@@ -244,10 +253,10 @@ class PositionManager(startPieces: Map<Pair<Int, Int>, PieceInfo>) {
             }
         }
 
-        previousPieces = potentialNewPieces
+        previousPosition = potentialNewPosition
         val tmp = potentialNewMove
         potentialNewMove = null
-        _isPositionReady.value = false
+        _isMoveFound.value = false
         onMove = if(onMove == ColorTeam.WHITE) ColorTeam.BLACK else ColorTeam.WHITE
         return tmp
     }

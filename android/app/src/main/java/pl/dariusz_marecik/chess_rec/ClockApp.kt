@@ -1,6 +1,8 @@
 package pl.dariusz_marecik.chess_rec
 
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,7 +12,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,11 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.android.gms.maps.model.Circle
 
 private fun onPlayClick(gameStarted: MutableState<Boolean>, viewModel: PiecesViewModel, positionManager: MutableState<PositionManager?>, startPosition: MutableState<Map<Pair<Int, Int>, PieceInfo>?>) {
     if(!gameStarted.value){
@@ -34,7 +32,7 @@ private fun onPlayClick(gameStarted: MutableState<Boolean>, viewModel: PiecesVie
     }
     else{
         positionManager.value?.let { manager ->
-            if (manager.isPositionReady.value) {
+            if (manager.isMoveFound.value) {
                 val move = manager.acceptNewState()
                 if (move != null) {
                     viewModel.saveMove(move)
@@ -57,12 +55,14 @@ fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
     var showDialog by remember { mutableStateOf(false) }
     var gameUrl by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val activity = context as Activity
+    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     val startPosition = remember { mutableStateOf<Map<Pair<Int, Int>, PieceInfo>?>(null) }
     val gameStarted = remember { mutableStateOf(false) }
 
     val piecesFlow = remember(positionManager.value, gameStarted.value) {
         if (gameStarted.value && positionManager.value != null) {
-            positionManager.value!!.piecesMap
+            positionManager.value!!.positionToDraw
         } else {
             viewModel.pieces
         }
@@ -129,11 +129,13 @@ fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
                     //save
                     IconButton(
                         onClick = {
-                            val pgn = PgnExporter.export(viewModel.moveList.value, startPosition.value!!)
-                            LichessConverter.importPgnToLichess(pgn) { url ->
-                                if (url != null) {
-                                    gameUrl = url
-                                    showDialog = true
+                            if(gameStarted.value) {
+                                val pgn = PgnExporter.export(viewModel.moveList.value, startPosition.value!!)
+                                LichessConverter.importPgnToLichess(pgn) { url ->
+                                    if (url != null) {
+                                        gameUrl = url
+                                        showDialog = true
+                                    }
                                 }
                             }
                         },
@@ -175,10 +177,6 @@ fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
                 Text("White Player", fontSize = 20.sp, color = whitePlayerFontColor)
             }
     }
-
-
-
-
 
     }
     if (showDialog) {

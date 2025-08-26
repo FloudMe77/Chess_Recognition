@@ -133,9 +133,9 @@ class ChessRecognisionModel():
 
         resized = cv2.resize(image, target_size)
 
-        board_results = self.model_board(resized, conf=0.25, imgsz=640, save = True)
+        board_results = self.model_board(resized, conf=0.25, imgsz=640)
 
-        pieces_results = self.model_pieces(resized, conf=0.2, imgsz=640, save = True)
+        pieces_results = self.model_pieces(resized, conf=0.2, imgsz=640)
 
         try:
             corners = self.find_corners(mask = board_results[0].masks.data[0].cpu().numpy())

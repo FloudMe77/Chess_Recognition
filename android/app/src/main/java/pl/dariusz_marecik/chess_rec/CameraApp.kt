@@ -1,12 +1,11 @@
 package pl.dariusz_marecik.chess_rec
 
+import android.app.Activity
 import android.content.Context
-import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.net.Uri
 import android.util.Log
-import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture.OnImageCapturedCallback
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -15,23 +14,18 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.LocalConfiguration
+import android.content.res.Configuration
 import kotlinx.coroutines.isActive
 
 private fun takePhoto(
@@ -72,11 +66,13 @@ private fun takePhoto(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
     val context = LocalContext.current
-    val scaffoldState = rememberBottomSheetScaffoldState()
+    val activity = context as Activity
+    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    val configuration = LocalConfiguration.current
+    val orientation = configuration.orientation
     val controller = remember {
         LifecycleCameraController(applicationContext).apply {
             setEnabledUseCases(
@@ -90,14 +86,42 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
 
     val pieces by piecesFlow.collectAsState()
 
-
+    if(orientation == Configuration.ORIENTATION_LANDSCAPE){
+        horizontalDrawer(isConnected, pieces, viewModel, isCameraView, controller)
+    }
+    else{
+        verticalDrawer(isConnected, pieces, viewModel, isCameraView, controller)
+    }
+    LaunchedEffect(controller) {
+        while (isActive) {
+            try {
+                takePhoto(
+                    controller = controller,
+                    viewModel,
+                    context
+                )
+            } catch (e: Exception) {
+                Log.d("CameraProblem", e.message.toString())
+            }
+            delay(200)
+        }
+    }
+}
+@Composable
+private fun verticalDrawer(
+    isConnected: Boolean,
+    pieces: Map<Pair<Int, Int>, PieceInfo>,
+    viewModel: PiecesViewModel,
+    isCameraView: MutableState<Boolean>,
+    controller: LifecycleCameraController
+) {
     Column(Modifier.fillMaxSize()) {
-        Row(modifier = Modifier.weight(1f).background(Color.LightGray)){
+        Row(modifier = Modifier.weight(1f).background(Color.LightGray)) {
             Box(
                 modifier = Modifier
                     .size(70.dp) // średnica
                     .padding(25.dp)
-                    .background( if(isConnected) Color.Green else Color.Red, shape = CircleShape)
+                    .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
             )
             BoardContent(
                 pieces,
@@ -112,44 +136,49 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
 
         Box(modifier = Modifier.weight(4f))
         {
+            CameraPreview(
+                controller = controller,
+                modifier = Modifier.fillMaxSize().padding(10.dp),
+            )
 
-            BottomSheetScaffold(
-                scaffoldState = scaffoldState,
-                sheetPeekHeight = 0.dp,
-                sheetContent = {
-                    PhotoBottomSheetContent(
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                },
-            ) { padding ->
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                ) {
-                    CameraPreview(
-                        controller = controller,
-                        modifier = Modifier.fillMaxSize()
-                    )
-
-
-
-                }
-            }
-            LaunchedEffect(controller) {
-                while (isActive) {
-                    try {
-                        takePhoto(
-                            controller = controller,
-                            viewModel,
-                            context
-                        )
-                    } catch (e: Exception) {
-                        Log.d("CameraProblem", e.message.toString());
-                    }
-                    delay(500)
-                }
+        }
+    }
+}
+@Composable
+private fun horizontalDrawer(
+    isConnected: Boolean,
+    pieces: Map<Pair<Int, Int>, PieceInfo>,
+    viewModel: PiecesViewModel,
+    isCameraView: MutableState<Boolean>,
+    controller: LifecycleCameraController
+) {
+    Row(Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(1f).background(Color.LightGray)) {
+            Box(
+                modifier = Modifier
+                    .size(70.dp) // średnica
+                    .padding(25.dp)
+                    .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
+            )
+            BoardContent(
+                pieces,
+                modifier = Modifier.weight(1f),
+                viewModel.getLatestMove(),
+                null
+            )
+            IconButton(onClick = { isCameraView.value = !isCameraView.value }, modifier = Modifier.size(70.dp)) {
+                Icon(Icons.Default.Settings, contentDescription = "Change mode")
             }
         }
+
+        Box(modifier = Modifier.weight(4f))
+        {
+            CameraPreview(
+                controller = controller,
+                modifier = Modifier.fillMaxSize().padding(10.dp),
+
+            )
+        }
+
     }
 }

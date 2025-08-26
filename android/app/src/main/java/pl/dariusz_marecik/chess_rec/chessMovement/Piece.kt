@@ -13,6 +13,10 @@ interface Piece {
         piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
     ): List<Pair<Int, Int>>
+    fun possibleMove(
+        from: Pair<Int, Int>,
+        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+    ): List<Pair<Int, Int>>
 
     // czy to był legalny ruch bez zbicia?
     fun abstractValidateMove(
@@ -55,6 +59,23 @@ interface Piece {
                 if (pieceAtNewPos != null && pieceAtNewPos.color != colorOfPiece) {
                     possiblePositions.add(newPosition)
                 }
+            }
+        }
+        return possiblePositions
+    }
+
+    fun abstractPossibleMove(
+        from: Pair<Int, Int>,
+        versor: Pair<Int, Int>,
+        previousPieces: Map<Pair<Int, Int>, PieceInfo>
+    ): List<Pair<Int, Int>> {
+        val possiblePositions = mutableListOf<Pair<Int, Int>>()
+
+        for (direction in listOf(-1, +1)) {
+            var newCords = from + (versor * direction)
+            while (isOnMap(newCords) && !previousPieces.containsKey(newCords)) {
+                newCords += (versor * direction)
+                possiblePositions.add(newCords)
             }
         }
         return possiblePositions

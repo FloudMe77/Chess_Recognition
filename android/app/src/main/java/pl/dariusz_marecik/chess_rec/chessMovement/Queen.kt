@@ -24,4 +24,11 @@ class Queen:Piece {
         possiblePositions += abstractPossibleTake(from, Pair(0, 1), piecesPosition)
         return possiblePositions
     }
+
+    override fun possibleMove(
+        from: Pair<Int, Int>,
+        piecesPosition: Map<Pair<Int, Int>, PieceInfo>
+    ): List<Pair<Int, Int>> {
+        TODO("Not yet implemented")
+    }
 }

@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import okhttp3.*
 import android.view.WindowManager
+import androidx.compose.runtime.saveable.rememberSaveable
 import java.io.IOException
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
@@ -77,79 +78,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun takePhoto(
-        controller: LifecycleCameraController,
-        piecesViewModel: PiecesViewModel
-    ){
-        controller.takePicture(
-            ContextCompat.getMainExecutor(applicationContext),
-            object  : OnImageCapturedCallback(){
-                override fun onError(exception: ImageCaptureException) {
-                    super.onError(exception)
-                    Log.e("Camera", "Couldn't capture image", exception)
-                }
-
-                override fun onCaptureSuccess(image: ImageProxy) {
-                    super.onCaptureSuccess(image)
-
-                    val matrix = Matrix().apply {
-                        postRotate(image.imageInfo.rotationDegrees.toFloat())
-                    }
-
-                    val rotatedBitmap = Bitmap.createBitmap(
-                        image.toBitmap(),
-                        0,
-                        0,
-                        image.width,
-                        image.height,
-                        matrix,
-                        true
-                    )
-
-                    piecesViewModel.sendImage(rotatedBitmap)
-
-                    image.close()
-                }
-            }
-        )
-    }
-
-    private fun onPlayClick(gameStarted: MutableState<Boolean>, viewModel: PiecesViewModel, positionManager: MutableState<PositionManager?>,controller: LifecycleCameraController, startPosition: MutableState<Map<Pair<Int, Int>, PieceInfo>?>) {
-        if(!gameStarted.value){
-            startPosition.value = viewModel.pieces.value
-            positionManager.value = PositionManager(viewModel.pieces.value)
-            gameStarted.value = true
-        }
-        else{
-            positionManager.value?.let { manager ->
-                if (manager.isPositionReady.value) {
-                    val move = manager.acceptNewState()
-                    if (move != null) {
-                        viewModel.saveMove(move)
-                    }
-                    try {
-                        takePhoto(
-                            controller = controller,
-                            viewModel
-                        )
-                    } catch (e: Exception) {
-                        Log.d("zjebało sie", e.message.toString());
-                    }
-                }
-            }
-        }
-
-    }
-    private fun onRestartClick(gameStarted: MutableState<Boolean>, positionManager: MutableState<PositionManager?>, startPosition: MutableState<Map<Pair<Int, Int>, PieceInfo>?>, viewModel: PiecesViewModel){
-        gameStarted.value = false
-        positionManager.value = null
-        startPosition.value = null
-        viewModel.restartListMove()
-    }
-
     @Composable
     fun MainApp(applicationContext: Context) {
-        val isCameraView = remember { mutableStateOf(false) }
+        val isCameraView = rememberSaveable { mutableStateOf(false) }
         val viewModel = viewModel<PiecesViewModel>()
         if(isCameraView.value){
             CameraApp(applicationContext, isCameraView, viewModel)
@@ -160,7 +91,6 @@ class MainActivity : ComponentActivity() {
 
 
         }
-
     }
 
 

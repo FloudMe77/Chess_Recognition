@@ -40,4 +40,22 @@ class Knight:Piece {
         }
         return possiblePositions
     }
+
+    override fun possibleMove(
+        from: Pair<Int, Int>,
+        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+    ): List<Pair<Int, Int>> {
+        val possibleCords = mutableListOf<Pair<Int, Int>>()
+        for(direction in listOf(Pair(1, 2), Pair(2, 1))) {
+            for (sgnX in listOf(-1, +1)){
+                for(sgnY in listOf(-1, +1)){
+                    val newCords = from + (direction * Pair(sgnX, sgnY))
+                    if(isOnMap(newCords) && !piecesPosition.containsKey(newCords)){
+                        possibleCords.add(newCords)
+                    }
+                }
+            }
+        }
+        return possibleCords
+    }
 }

@@ -35,4 +35,21 @@ class King: Piece {
         }
         return possiblePositions
     }
+    override fun possibleMove(
+        from: Pair<Int, Int>,
+        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+    ): List<Pair<Int, Int>> {
+        val possiblePositions = mutableListOf<Pair<Int, Int>>()
+        for (i in -1..1){
+            for (j in -1..1){
+                if(i==j && i==0) continue
+                val versor = Pair(i, j)
+                val newPosition = from + versor
+                if(isOnMap(newPosition) && !piecesPosition.containsKey(newPosition)){
+                    possiblePositions.add(newPosition)
+                }
+            }
+        }
+        return possiblePositions
+    }
 }

@@ -38,4 +38,23 @@ class Pawn:Piece {
         }
         return possiblePositions
     }
+
+    override fun possibleMove(
+        from: Pair<Int, Int>,
+        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+    ): List<Pair<Int, Int>> {
+        val possiblePositions = mutableListOf<Pair<Int, Int>>()
+        val colorOfPiece = piecesPosition[from]?.color ?: return possiblePositions
+        for (directionX in listOf(-1, +1)) {
+            val directionY = if (colorOfPiece == ColorTeam.WHITE) 1 else -1
+            val newPosition = from + (Pair(-1,1) * Pair(directionX, directionY))
+            if(isOnMap(newPosition)){
+                val pieceAtNewPos = piecesPosition[newPosition]
+                if (pieceAtNewPos != null && pieceAtNewPos.color != colorOfPiece) {
+                    possiblePositions.add(newPosition)
+                }
+            }
+        }
+        return possiblePositions
+    }
 }

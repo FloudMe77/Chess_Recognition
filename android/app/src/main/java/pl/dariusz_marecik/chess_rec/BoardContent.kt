@@ -52,7 +52,7 @@ fun BoardContent(
                             else -> baseColor
                         }
 
-                        val piece = pieces.get(boxPosition)
+                        val piece = pieces[boxPosition]
 
                         Box(
                             modifier = Modifier
@@ -76,16 +76,12 @@ fun BoardContent(
                                     PieceKind.BLACK_BISHOP -> R.drawable.black_bishop
                                     PieceKind.BLACK_QUEEN -> R.drawable.black_queen
                                     PieceKind.BLACK_KING -> R.drawable.black_king
-                                    else -> null
                                 }
-                                imageResource?.let { res ->
-
-                                    Image(
-                                        painter = painterResource(res),
-                                        contentDescription = "${it.position} (${it.id})",
+                                Image(
+                                    painter = painterResource(imageResource),
+                                    contentDescription = "${it.position} (${it.id})",
 
                                     )
-                                }
                             }
                         }
                     }

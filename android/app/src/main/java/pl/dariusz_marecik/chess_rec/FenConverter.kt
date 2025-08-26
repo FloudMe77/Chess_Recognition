@@ -6,10 +6,10 @@ object FenConverter {
     fun mapToFen(piecesMap: Map<Pair<Int, Int>, PieceInfo>): String {
         val rows = mutableListOf<String>()
 
-        for (rank in 7 downTo 0) {  // od 8 do 1
+        for (rank in 7 downTo 0) {
             var rowFen = ""
             var emptyCount = 0
-            for (file in 0..7) {   // od 'a' do 'h'
+            for (file in 0..7) {
                 val pieceInfo = piecesMap[Pair(file, rank)]
                 if (pieceInfo != null) {
                     if (emptyCount > 0) {
@@ -23,7 +23,7 @@ object FenConverter {
             }
             if (emptyCount > 0) rowFen += emptyCount
 
-            rows.add(rowFen)  // <- dodanie wiersza do listy
+            rows.add(rowFen)
         }
         return rows.joinToString("/") + " w KQkq - 0 1"
     }
