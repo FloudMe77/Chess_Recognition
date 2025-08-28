@@ -28,7 +28,6 @@ async def handle(websocket):
 
         results = on_image_received(img_rgb)
 
-        # Narysuj bbox na obrazie
         annotated = results.plot()
         draw_helper.plot_cv(annotated)
 

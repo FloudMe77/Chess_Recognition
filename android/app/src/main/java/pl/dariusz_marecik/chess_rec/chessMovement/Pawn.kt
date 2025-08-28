@@ -45,14 +45,17 @@ class Pawn:Piece {
     ): List<Pair<Int, Int>> {
         val possiblePositions = mutableListOf<Pair<Int, Int>>()
         val colorOfPiece = piecesPosition[from]?.color ?: return possiblePositions
-        for (directionX in listOf(-1, +1)) {
-            val directionY = if (colorOfPiece == ColorTeam.WHITE) 1 else -1
-            val newPosition = from + (Pair(-1,1) * Pair(directionX, directionY))
-            if(isOnMap(newPosition)){
-                val pieceAtNewPos = piecesPosition[newPosition]
-                if (pieceAtNewPos != null && pieceAtNewPos.color != colorOfPiece) {
-                    possiblePositions.add(newPosition)
-                }
+        val directionY = if (colorOfPiece == ColorTeam.WHITE) 1 else -1
+        var newCords = from + Pair(0, directionY)
+        if(isOnMap(newCords) && !piecesPosition.containsKey(newCords)){
+            possiblePositions.add(newCords)
+        }
+
+        // o dwa
+        if((colorOfPiece == ColorTeam.WHITE && from.second == 1)||(colorOfPiece == ColorTeam.BLACK && from.second == 6)){
+            newCords = from + Pair(0, directionY * 2)
+            if(isOnMap(newCords) && !piecesPosition.containsKey(newCords)){
+                possiblePositions.add(newCords)
             }
         }
         return possiblePositions

@@ -125,7 +125,6 @@ class ChessRecognisionModel():
         h, w = image.shape[:2]
         aspect_ratio = w / h
 
-        # Wybór docelowego rozmiaru na podstawie proporcji
         if 0.7 < aspect_ratio < 0.8 or 0.7 < 1/aspect_ratio < 0.8:
             target_size = (640, 480) if w > h else (480, 640)
         else:

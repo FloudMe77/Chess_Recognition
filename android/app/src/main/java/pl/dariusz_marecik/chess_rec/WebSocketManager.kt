@@ -1,9 +1,9 @@
 import android.graphics.Bitmap
-import android.util.Log
-import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
+import okio.ByteString
 import pl.dariusz_marecik.chess_rec.PieceInfo
+import java.io.ByteArrayOutputStream
 
 class WebSocketManager(private val url: String) {
 
@@ -15,10 +15,21 @@ class WebSocketManager(private val url: String) {
             webSocketClient.startWithRetry(url)
         }
     }
+    private fun scaleBitmap(bitmap: Bitmap, maxSize: Int = 640): Bitmap {
+        val ratio = minOf(maxSize.toFloat() / bitmap.width, maxSize.toFloat() / bitmap.height)
+        val width = (bitmap.width * ratio).toInt()
+        val height = (bitmap.height * ratio).toInt()
+        return Bitmap.createScaledBitmap(bitmap, width, height, true)
+    }
 
     fun sendImage(bitmap: Bitmap) {
         scope.launch {
-            webSocketClient.sendImage(bitmap)
+            val scaledBitmap = scaleBitmap(bitmap, 640)
+            val stream = ByteArrayOutputStream()
+            scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val byteArray = stream.toByteArray()
+            val byteString = ByteString.of(*byteArray)
+            webSocketClient.sendBytes(byteString)
         }
     }
 

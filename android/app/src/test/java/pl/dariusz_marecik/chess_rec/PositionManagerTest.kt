@@ -3,7 +3,7 @@ package pl.dariusz_marecik.chess_rec
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.*
  class PositionManagerTest{
-  val piecesMap: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
+  val normalPositionMap: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
    (0 to 6) to PieceInfo(6, "a7", emptyList()),
    (1 to 4) to PieceInfo(0, "b5", emptyList()),
    (1 to 7) to PieceInfo(7, "b8", emptyList()),
@@ -19,35 +19,98 @@ import org.junit.jupiter.api.Assertions.*
    (6 to 6) to PieceInfo(6, "g7", emptyList()),
    (7 to 3) to PieceInfo(3, "h4", emptyList()),
   )
+  val matePositionMap: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
+   (1 to 4) to PieceInfo(6, "b5", emptyList()),
+   (2 to 1) to PieceInfo(4, "c2", emptyList()),
+   (2 to 2) to PieceInfo(2, "c3", emptyList()),
+   (3 to 4) to PieceInfo(6, "d5", emptyList()),
+   (4 to 5) to PieceInfo(1, "e6", emptyList()),
+   (5 to 3) to PieceInfo(11, "f4", emptyList()),
+   (6 to 3) to PieceInfo(10, "g4", emptyList()),
+   (6 to 6) to PieceInfo(3, "g7", emptyList()),
+   (7 to 3) to PieceInfo(5, "h4", emptyList())
+  )
+  val notMatePositionMap: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
+   (1 to 4) to PieceInfo(6, "b5", emptyList()),
+   (2 to 1) to PieceInfo(4, "c2", emptyList()),
+   (2 to 2) to PieceInfo(2, "c3", emptyList()),
+   (3 to 4) to PieceInfo(6, "d5", emptyList()),
+   (4 to 5) to PieceInfo(1, "e6", emptyList()),
+   (5 to 3) to PieceInfo(11, "f4", emptyList()),
+   (6 to 3) to PieceInfo(10, "g4", emptyList()),
+   (6 to 6) to PieceInfo(3, "g7", emptyList()),
+   (7 to 3) to PieceInfo(5, "h4", emptyList()),
+   (5 to 1) to PieceInfo(2, "f2", emptyList()),
+  )
+  val staleMatePositionMap: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
+   (1 to 4) to PieceInfo(6, "b5", emptyList()),
+   (3 to 4) to PieceInfo(6, "d5", emptyList()),
+   (5 to 3) to PieceInfo(11, "f4", emptyList()),
+   (5 to 4) to PieceInfo(10, "f5", emptyList()),
+   (7 to 3) to PieceInfo(5, "h4", emptyList()),
+   (7 to 2) to PieceInfo(0, "h3", emptyList()),
+  )
+  val elPassantOnlyValidMove: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
+   (0 to 0) to PieceInfo(11, "a1", emptyList()),
+   (3 to 6) to PieceInfo(6, "d7", emptyList()),
+   (4 to 4) to PieceInfo(0, "e5", emptyList()),
+   (5 to 2) to PieceInfo(10, "f3", emptyList()),
+   (7 to 3) to PieceInfo(5, "h4", emptyList()),
+   (4 to 5) to PieceInfo(8, "e6", emptyList())
+  )
+  val elPassantOnlyValidMove2: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
+   (0 to 0) to PieceInfo(11, "a1", emptyList()),
+   (3 to 4) to PieceInfo(6, "d5", emptyList()),
+   (4 to 4) to PieceInfo(0, "e5", emptyList()),
+   (5 to 2) to PieceInfo(10, "f3", emptyList()),
+   (7 to 3) to PieceInfo(5, "h4", emptyList()),
+   (4 to 5) to PieceInfo(8, "e6", emptyList())
+  )
 
   fun takeTest(from: Pair<Int,Int>, to: Pair<Int,Int>){
-   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = piecesMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
+   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = normalPositionMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
    piecesMapAfter[to] = piecesMapAfter[from]!!
    piecesMapAfter.remove(from)
+   normalPositionMap[from]?.let { piece ->
+    val positionManager = PositionManager(normalPositionMap, piece.color)
 
-   val positionManager = PositionManager(piecesMap)
-   assertFalse(positionManager.isKingAttacked(piecesMap, ColorTeam.BLACK))
-   assertTrue(positionManager.isKingAttacked(piecesMap, ColorTeam.WHITE))
-   assertEquals(Triple(from, to, Action.TAKE), positionManager.findLegalMove(setOf(from), setOf(),piecesMapAfter))
+    assertFalse(positionManager.isKingAttacked(normalPositionMap, ColorTeam.BLACK))
+    assertTrue(positionManager.isKingAttacked(normalPositionMap, ColorTeam.WHITE))
+    assertEquals(
+     Move(from, to, piece.name, Action.TAKE),
+     positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf())
+    )
 
-   //reszta błędna
-   for(cords in piecesMap.keys){
-    if(cords.equals(from)) continue
-    assertNull(positionManager.findLegalMove(setOf(cords), setOf(), piecesMapAfter))
+    for (coords in normalPositionMap.keys) {
+     if (coords == from) continue
+     assertNull(positionManager.findLegalMove(piecesMapAfter, setOf(coords), setOf()))
+    }
+   } ?: run {
+    fail("Brak figury na polu $from") // np. test ma się nie udać, jeśli brak
    }
+
   }
 
   fun moveTest(from: Pair<Int, Int>, ablePairs:List<Pair<Int,Int>>){
-   val positionManager = PositionManager(piecesMap)
-   val allPairs = (0..7).flatMap { x -> (0..7).map { y -> x to y } }
-   val unablePairs = allPairs - ablePairs
-   for(to in ablePairs){
-    assertEquals(Triple(from, to, Action.MOVE), positionManager.findLegalMove(setOf(from), setOf(to), piecesMap))
-   }
-   for(to in unablePairs){
-    assertNull(positionManager.findLegalMove(setOf(from), setOf(to), piecesMap))
-   }
+
+   normalPositionMap[from]?.let { piece ->
+    val positionManager = PositionManager(normalPositionMap, piece.color)
+    assertEquals(ablePairs.toSet(), piece.movement.possibleMove(from, normalPositionMap).toSet())
+
+    val allPairs = (0..7).flatMap { x -> (0..7).map { y -> x to y } }
+    val unablePairs = allPairs - ablePairs
+    for(to in ablePairs){
+     assertEquals(Move(from, to, piece.name,Action.MOVE), positionManager.findLegalMove(normalPositionMap, setOf(from), setOf(to)))
+    }
+    for(to in unablePairs){
+     assertNull(positionManager.findLegalMove(normalPositionMap, setOf(from), setOf(to)))
+    }
+  } ?: run {
+   fail("Brak figury na polu $from") // np. test ma się nie udać, jeśli brak
   }
+  }
+
+
 
  @Test
  fun knightTakeTest(){
@@ -57,27 +120,32 @@ import org.junit.jupiter.api.Assertions.*
   fun rookTakeTest(){
    val from = Pair(1,7)
    val to = Pair(1,4)
-   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = piecesMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
+   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = normalPositionMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
    piecesMapAfter[to] = piecesMapAfter[from]!!
    piecesMapAfter.remove(from)
 
-   val positionManager = PositionManager(piecesMap)
-   assertFalse(positionManager.isKingAttacked(piecesMap, ColorTeam.BLACK))
-   assertTrue(positionManager.isKingAttacked(piecesMap, ColorTeam.WHITE))
-   assertEquals(Triple(from, to, Action.TAKE), positionManager.findLegalMove(setOf(from), setOf(),piecesMapAfter))
+
+   normalPositionMap[from]?.let {
+    val positionManager = PositionManager(normalPositionMap, it.color)
+    assertFalse(positionManager.isKingAttacked(normalPositionMap, ColorTeam.BLACK))
+    assertTrue(positionManager.isKingAttacked(normalPositionMap, ColorTeam.WHITE))
+    assertEquals(Move(from, to, it.name, Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
+   }?: run {
+    fail("Brak figury na polu $from") // np. test ma się nie udać, jeśli brak
+   }
   }
   @Test
   fun pawnTakeTest(){
    val from = Pair(1,4)
    val to = Pair(2,5)
-   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = piecesMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
+   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = normalPositionMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
    piecesMapAfter[to] = piecesMapAfter[from]!!
    piecesMapAfter.remove(from)
 
-   val positionManager = PositionManager(piecesMap)
-   assertFalse(positionManager.isKingAttacked(piecesMap, ColorTeam.BLACK))
-   assertTrue(positionManager.isKingAttacked(piecesMap, ColorTeam.WHITE))
-   assertEquals(Triple(from, to, Action.TAKE), positionManager.findLegalMove(setOf(from), setOf(),piecesMapAfter))
+   val positionManager = PositionManager(normalPositionMap)
+   assertFalse(positionManager.isKingAttacked(normalPositionMap, ColorTeam.BLACK))
+   assertTrue(positionManager.isKingAttacked(normalPositionMap, ColorTeam.WHITE))
+   assertEquals(Move(from, to, PieceKind.WHITE_PAWN,Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
   }
   @Test
   fun bishopTakeTest() {
@@ -87,14 +155,20 @@ import org.junit.jupiter.api.Assertions.*
   fun kingTakeTest() {
    val from = Pair(5,7)
    val to = Pair(5,6)
-   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = piecesMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
+   val piecesMapAfter: MutableMap<Pair<Int, Int>, PieceInfo> = normalPositionMap.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
    piecesMapAfter[to] = piecesMapAfter[from]!!
    piecesMapAfter.remove(from)
 
-   val positionManager = PositionManager(piecesMap)
-   assertFalse(positionManager.isKingAttacked(piecesMap, ColorTeam.BLACK))
-   assertTrue(positionManager.isKingAttacked(piecesMap, ColorTeam.WHITE))
-   assertEquals(Triple(from, to, Action.TAKE), positionManager.findLegalMove(setOf(from), setOf(),piecesMapAfter))
+
+   normalPositionMap[from]?.let {
+    val positionManager = PositionManager(normalPositionMap, it.color)
+    assertFalse(positionManager.isKingAttacked(normalPositionMap, ColorTeam.BLACK))
+    assertTrue(positionManager.isKingAttacked(normalPositionMap, ColorTeam.WHITE))
+    assertEquals(Move(from, to, it.name,Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
+   }?: run {
+    fail("Brak figury na polu $from") // np. test ma się nie udać, jeśli brak
+   }
+
   }
 
   // zwykłe przesunięcie
@@ -130,6 +204,21 @@ import org.junit.jupiter.api.Assertions.*
    val from = Pair(2,6)
    val tos = listOf(Pair(0,7), Pair(0,5), Pair(3,4), Pair(4,5), Pair(4,7))
    moveTest(from, tos)
+  }
+  @Test
+  fun mateTest(){
+   val positionManager = PositionManager(matePositionMap)
+   assertFalse(positionManager.haveAnyLegalMove(matePositionMap))
+   assertFalse(positionManager.haveAnyLegalMove(staleMatePositionMap))
+   assertTrue(positionManager.haveAnyLegalMove(notMatePositionMap))
+  }
+
+  @Test
+  fun onlyElPassantLegal(){
+   val positionManager = PositionManager(elPassantOnlyValidMove,ColorTeam.BLACK)
+   positionManager.considerNewPosition(elPassantOnlyValidMove2)
+   println(positionManager.acceptNewState())
+   assertTrue(positionManager.haveAnyLegalMove(elPassantOnlyValidMove2))
   }
 
  }

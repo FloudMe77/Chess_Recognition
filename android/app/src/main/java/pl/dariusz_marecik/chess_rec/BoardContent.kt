@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.core.graphics.ColorUtils
@@ -59,10 +60,10 @@ fun BoardContent(
                                 .weight(1f)
                                 .aspectRatio(1f)
                                 .background(squareColor),
-//                                .padding(8.dp)
                             contentAlignment = Alignment.Center
                         ) {
                             piece?.let {
+                                val rotationModifier = if(piece.color == ColorTeam.BLACK) Modifier.graphicsLayer { rotationZ = 180f } else Modifier
                                 val imageResource = when (it.name) {
                                     PieceKind.WHITE_PAWN -> R.drawable.white_pawn
                                     PieceKind.WHITE_ROOK -> R.drawable.white_rook
@@ -80,7 +81,7 @@ fun BoardContent(
                                 Image(
                                     painter = painterResource(imageResource),
                                     contentDescription = "${it.position} (${it.id})",
-
+                                    modifier = rotationModifier
                                     )
                             }
                         }

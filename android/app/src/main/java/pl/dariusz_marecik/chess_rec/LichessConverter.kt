@@ -1,3 +1,5 @@
+package pl.dariusz_marecik.chess_rec
+
 import okhttp3.*
 import org.jsoup.Jsoup
 import java.io.IOException

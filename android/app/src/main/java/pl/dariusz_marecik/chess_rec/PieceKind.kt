@@ -1,7 +1,7 @@
 package pl.dariusz_marecik.chess_rec
 
 enum class PieceKind(val id: Int) {
-    WHITE_PAWN(0,),
+    WHITE_PAWN(0),
     WHITE_ROOK(1),
     WHITE_KNIGHT(2),
     WHITE_BISHOP(3),

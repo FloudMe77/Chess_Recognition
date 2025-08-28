@@ -1,7 +1,5 @@
 package pl.dariusz_marecik.chess_rec
 
-import java.io.File
-
 object PgnExporter {
 
     fun export(moves: List<Move>, startPosition: Map<Pair<Int, Int>, PieceInfo>): String {
@@ -21,7 +19,6 @@ object PgnExporter {
         sb.appendLine()
 
         moves.forEachIndexed { index, move ->
-            // Numer ruchu tylko dla białych
             if (move.pieceKind.name.startsWith("WHITE")) {
                 sb.append("${index / 2 + 1}. ")
             }
@@ -32,7 +29,6 @@ object PgnExporter {
             sb.append(" ")
         }
 
-        // Zapis do pliku
         return sb.toString()
     }
 

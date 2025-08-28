@@ -74,8 +74,8 @@ interface Piece {
         for (direction in listOf(-1, +1)) {
             var newCords = from + (versor * direction)
             while (isOnMap(newCords) && !previousPieces.containsKey(newCords)) {
-                newCords += (versor * direction)
                 possiblePositions.add(newCords)
+                newCords += (versor * direction)
             }
         }
         return possiblePositions

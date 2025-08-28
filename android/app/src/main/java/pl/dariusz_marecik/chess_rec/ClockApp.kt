@@ -1,6 +1,7 @@
 package pl.dariusz_marecik.chess_rec
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
@@ -52,13 +53,16 @@ private fun onRestartClick(gameStarted: MutableState<Boolean>, positionManager: 
 @Composable
 fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
     val positionManager = remember { mutableStateOf<PositionManager?>(null) }
-    var showDialog by remember { mutableStateOf(false) }
-    var gameUrl by remember { mutableStateOf("") }
+    val showDialog = remember { mutableStateOf(false) }
+    val gameUrl = remember { mutableStateOf("") }
     val context = LocalContext.current
     val activity = context as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     val startPosition = remember { mutableStateOf<Map<Pair<Int, Int>, PieceInfo>?>(null) }
     val gameStarted = remember { mutableStateOf(false) }
+    val messageForDialog = remember { mutableStateOf("") }
+    val isMate = positionManager.value?.isMate?.collectAsState(initial = false)?.value ?: false
+    val isStaleMate = positionManager.value?.isStaleMate?.collectAsState(initial = false)?.value ?: false
 
     val piecesFlow = remember(positionManager.value, gameStarted.value) {
         if (gameStarted.value && positionManager.value != null) {
@@ -129,15 +133,9 @@ fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
                     //save
                     IconButton(
                         onClick = {
-                            if(gameStarted.value) {
-                                val pgn = PgnExporter.export(viewModel.moveList.value, startPosition.value!!)
-                                LichessConverter.importPgnToLichess(pgn) { url ->
-                                    if (url != null) {
-                                        gameUrl = url
-                                        showDialog = true
-                                    }
-                                }
-                            }
+                            calcGameUrl(gameStarted, viewModel, startPosition, gameUrl, showDialog)
+                            messageForDialog.value = "Link to the chess game:"
+
                         },
                         modifier = Modifier.size(70.dp)) {
                         Icon(Icons.Default.Add, contentDescription = "Save")
@@ -179,15 +177,62 @@ fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
     }
 
     }
-    if (showDialog) {
+    LaunchedEffect(positionManager.value, piecesFollow) {
+        positionManager.value?.considerNewPosition(piecesFollow)
+    }
+    LaunchedEffect(isMate) {
+        if(isMate){
+            messageForDialog.value = "Mate!! \nLink to the chess game: "
+            calcGameUrl(gameStarted, viewModel, startPosition, gameUrl, showDialog)
+
+        }
+    }
+    LaunchedEffect(isStaleMate) {
+        if(isStaleMate){
+            messageForDialog.value = "Stalemate!! \nLink to the chess game:"
+            calcGameUrl(gameStarted, viewModel, startPosition, gameUrl, showDialog)
+
+        }
+    }
+
+    if(showDialog.value){
+        showNotification(gameUrl.value, context, messageForDialog.value, showDialog)
+    }
+
+
+
+
+}
+
+private fun calcGameUrl(
+    gameStarted: MutableState<Boolean>,
+    viewModel: PiecesViewModel,
+    startPosition: MutableState<Map<Pair<Int, Int>, PieceInfo>?>,
+    gameUrl: MutableState<String>,
+    showDialog: MutableState<Boolean>
+) {
+    if (gameStarted.value) {
+        val pgn = PgnExporter.export(viewModel.moveList.value, startPosition.value!!)
+        LichessConverter.importPgnToLichess(pgn) { url ->
+            if (url != null) {
+                gameUrl.value = url
+                showDialog.value = true
+            }
+        }
+    }
+}
+
+@Composable
+private fun showNotification(gameUrl: String, context: Context, communicate: String, showDialog: MutableState<Boolean>) {
+    if (showDialog.value) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showDialog.value = false },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = { showDialog.value = false }) {
                     Text("OK")
                 }
             },
-            title = { Text("Link do partii") },
+            title = { Text(communicate) },
             text = {
                 ClickableText(
                     text = AnnotatedString(gameUrl),
@@ -199,9 +244,4 @@ fun ClockApp(isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
             }
         )
     }
-    LaunchedEffect(positionManager.value, piecesFollow) {
-        positionManager.value?.considerNewPosition(piecesFollow)
-    }
-
-
 }
