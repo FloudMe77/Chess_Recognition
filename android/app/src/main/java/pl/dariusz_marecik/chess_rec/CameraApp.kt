@@ -3,12 +3,6 @@ package pl.dariusz_marecik.chess_rec
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.util.Log
-import androidx.camera.core.ImageCapture.OnImageCapturedCallback
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.background
@@ -23,67 +17,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalConfiguration
 import android.content.res.Configuration
-import kotlinx.coroutines.isActive
 
-private fun takePhoto(
-    controller: LifecycleCameraController,
-    piecesViewModel: PiecesViewModel,
-    applicationContext: Context
-){
-    controller.takePicture(
-        ContextCompat.getMainExecutor(applicationContext),
-        object  : OnImageCapturedCallback(){
-            override fun onError(exception: ImageCaptureException) {
-                super.onError(exception)
-                Log.e("Camera", "Couldn't capture image", exception)
-            }
 
-            override fun onCaptureSuccess(image: ImageProxy) {
-                super.onCaptureSuccess(image)
-
-                val matrix = Matrix().apply {
-                    postRotate(image.imageInfo.rotationDegrees.toFloat())
-                }
-
-                val rotatedBitmap = Bitmap.createBitmap(
-                    image.toBitmap(),
-                    0,
-                    0,
-                    image.width,
-                    image.height,
-                    matrix,
-                    true
-                )
-
-                piecesViewModel.sendImage(rotatedBitmap)
-
-                image.close()
-            }
-        }
-    )
-}
 
 @Composable
-fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>,  viewModel: PiecesViewModel) {
+fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, viewModel: PiecesViewModel) {
     val context = LocalContext.current
     val activity = context as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     val configuration = LocalConfiguration.current
     val orientation = configuration.orientation
+
     val controller = remember {
         LifecycleCameraController(applicationContext).apply {
             setEnabledUseCases(
-                CameraController.IMAGE_CAPTURE or
+                CameraController.IMAGE_ANALYSIS or
                         CameraController.VIDEO_CAPTURE
+            )
+
+            setImageAnalysisAnalyzer(
+                ContextCompat.getMainExecutor(applicationContext),
+                ChessImageAnalyzer(viewModel)
             )
         }
     }
+
     val piecesFlow = viewModel.pieces
     val isConnected by viewModel.getConnectionStatus().collectAsState()
-
     val pieces by piecesFlow.collectAsState()
 
     if(orientation == Configuration.ORIENTATION_LANDSCAPE){
@@ -92,21 +54,8 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
     else{
         verticalDrawer(isConnected, pieces, viewModel, isCameraView, controller)
     }
-    LaunchedEffect(controller) {
-        while (isActive) {
-            try {
-                takePhoto(
-                    controller = controller,
-                    viewModel,
-                    context
-                )
-            } catch (e: Exception) {
-                Log.d("CameraProblem", e.message.toString())
-            }
-            delay(200)
-        }
-    }
 }
+
 @Composable
 private fun verticalDrawer(
     isConnected: Boolean,
@@ -119,7 +68,7 @@ private fun verticalDrawer(
         Row(modifier = Modifier.weight(1f).background(Color.LightGray)) {
             Box(
                 modifier = Modifier
-                    .size(70.dp) // średnica
+                    .size(70.dp)
                     .padding(25.dp)
                     .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
             )
@@ -134,16 +83,15 @@ private fun verticalDrawer(
             }
         }
 
-        Box(modifier = Modifier.weight(4f))
-        {
+        Box(modifier = Modifier.weight(4f)) {
             CameraPreview(
                 controller = controller,
                 modifier = Modifier.fillMaxSize().padding(10.dp),
             )
-
         }
     }
 }
+
 @Composable
 private fun horizontalDrawer(
     isConnected: Boolean,
@@ -156,7 +104,7 @@ private fun horizontalDrawer(
         Column(modifier = Modifier.weight(1f).background(Color.LightGray)) {
             Box(
                 modifier = Modifier
-                    .size(70.dp) // średnica
+                    .size(70.dp)
                     .padding(25.dp)
                     .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
             )
@@ -171,14 +119,11 @@ private fun horizontalDrawer(
             }
         }
 
-        Box(modifier = Modifier.weight(4f))
-        {
+        Box(modifier = Modifier.weight(4f)) {
             CameraPreview(
                 controller = controller,
                 modifier = Modifier.fillMaxSize().padding(10.dp),
-
             )
         }
-
     }
 }

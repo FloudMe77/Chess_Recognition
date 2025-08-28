@@ -9,36 +9,32 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import pl.dariusz_marecik.chess_rec.PieceInfo
+import java.util.concurrent.TimeUnit
 
 
 class WebSocketClient : WebSocketListener() {
 
     private val client = OkHttpClient.Builder()
+        .pingInterval(2, TimeUnit.SECONDS)
         .build()
 
     private lateinit var webSocket: WebSocket
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var isReconnecting = false
+
     private val _isConnected = MutableStateFlow(false)
-    val isConnected: StateFlow<Boolean> = _isConnected
-    
+    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
     private var _piecesMap = MutableStateFlow<Map<Pair<Int, Int>, PieceInfo>>(emptyMap())
     val piecesMap: StateFlow<Map<Pair<Int, Int>, PieceInfo>> = _piecesMap.asStateFlow()
+
     private val gson = Gson()
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-
-    fun startWithRetry(url: String){
-        scope.launch {
-            while (!_isConnected.value) {
-                Log.d("WebSocket", "Trying to connect")
-                try {
-                    connect(url)
-                }
-                catch (_: SocketTimeoutException){
-
-                }
-                delay(10000)
-            }
+    fun startWithRetry(url: String) {
+        Log.d("WebSocket", "Trying to connect")
+        try {
+            connect(url)
+        } catch (_: SocketTimeoutException) {
         }
     }
 
@@ -47,11 +43,10 @@ class WebSocketClient : WebSocketListener() {
             .url(url)
             .build()
         webSocket = client.newWebSocket(request, this)
-
     }
 
     fun sendBytes(byteString: ByteString) {
-        if (_isConnected.value){
+        if (_isConnected.value) {
             webSocket.send(byteString)
             Log.d("WebSocket", "Image send success")
         }
@@ -59,7 +54,7 @@ class WebSocketClient : WebSocketListener() {
 
     fun disconnect() {
         _isConnected.value = false
-        scope.cancel()
+        scope.cancel() // zatrzymuje coroutines
         webSocket.close(1000, "Normal close")
     }
 
@@ -69,53 +64,49 @@ class WebSocketClient : WebSocketListener() {
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
-        if (_isConnected.value) {
-            try {
-                if(text.startsWith("Ping")){
+        if (!_isConnected.value) return
+        try {
+            val listType = object : TypeToken<List<PieceInfo>>() {}.type
+            val piecesList: List<PieceInfo> = gson.fromJson(text, listType)
 
-                }
-                else{
-                    val listType = object : TypeToken<List<PieceInfo>>() {}.type
-                    val piecesList: List<PieceInfo> = gson.fromJson(text, listType)
-                    val newPiecesMap = mutableMapOf<Pair<Int, Int>, PieceInfo>()
-                    for (piece in piecesList) {
-                        newPiecesMap.put(piece.cords, piece)
-                        Log.d("WebSocket", "JSON: ${piece.name} ${piece.cords}")
-                    }
-                    _piecesMap.value = newPiecesMap
-                }
-            } catch (e: Exception) {
-                Log.d("WebSocket", "Error: ${e.message}")
-            }
+            val newPiecesMap = piecesList.associateBy { it.cords }
+            _piecesMap.value = newPiecesMap
+
+            piecesList.forEach { Log.d("WebSocket", "JSON: ${it.name} ${it.cords}") }
+
+        } catch (e: Exception) {
+            Log.d("WebSocket", "Error parsing JSON: ${e.message}")
         }
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-
+        //
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         _isConnected.value = false
         Log.e("WebSocket", "Connection failed: ${t.message}", t)
-        scope.launch {
-            delay(1000) // np. 2 sekundy przerwy
-            try {
-                connect(webSocket.request().url.toString())
-            } catch (e: Exception) {
-                Log.e("WebSocket", "Retry failed: ${e.message}")
-            }
-        }
+        attemptReconnect(webSocket.request().url.toString())
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         Log.d("WebSocket", "Disconnected: $code / $reason")
         _isConnected.value = false
+        attemptReconnect(webSocket.request().url.toString())
+    }
+
+    private fun attemptReconnect(url: String) {
+        if (isReconnecting) return
+        isReconnecting = true
+
         scope.launch {
-            delay(1000) // np. 2 sekundy przerwy
+            delay(1000)
             try {
-                connect(webSocket.request().url.toString())
+                connect(url)
             } catch (e: Exception) {
                 Log.e("WebSocket", "Retry failed: ${e.message}")
+            } finally {
+                isReconnecting = false
             }
         }
     }
