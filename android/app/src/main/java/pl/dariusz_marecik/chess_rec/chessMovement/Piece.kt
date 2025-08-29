@@ -1,12 +1,13 @@
 package pl.dariusz_marecik.chess_rec.chessPieces
 
-import pl.dariusz_marecik.chess_rec.*
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.utils.*
 import kotlin.math.abs
 import kotlin.math.max
 
 interface Piece {
 
-    fun validateMove(from: Pair<Int, Int>, to: Pair<Int, Int>, piecesPosition:Map<Pair<Int, Int>,PieceInfo>, colorTeam: ColorTeam): Boolean
+    fun validateMove(from: Pair<Int, Int>, to: Pair<Int, Int>, piecesPosition:Map<Pair<Int, Int>, PieceInfo>, colorTeam: ColorTeam): Boolean
 
     fun possibleTake(
         from: Pair<Int, Int>,
@@ -22,7 +23,7 @@ interface Piece {
     fun abstractValidateMove(
         from: Pair<Int, Int>,
         to: Pair<Int, Int>,
-        previousPieces: Map<Pair<Int, Int>,PieceInfo>,
+        previousPieces: Map<Pair<Int, Int>, PieceInfo>,
         isValidDirection: (Pair<Int, Int>) -> Boolean,
     ): Boolean {
         val diff = to - from

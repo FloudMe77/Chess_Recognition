@@ -1,10 +1,10 @@
 package pl.dariusz_marecik.chess_rec.chessPieces
 
-import pl.dariusz_marecik.chess_rec.ColorTeam
-import pl.dariusz_marecik.chess_rec.PieceInfo
-import pl.dariusz_marecik.chess_rec.plus
-import pl.dariusz_marecik.chess_rec.minus
-import pl.dariusz_marecik.chess_rec.times
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
+import pl.dariusz_marecik.chess_rec.utils.plus
+import pl.dariusz_marecik.chess_rec.utils.minus
+import pl.dariusz_marecik.chess_rec.utils.times
 import kotlin.math.abs
 
 

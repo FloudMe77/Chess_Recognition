@@ -166,7 +166,3 @@ class ChessRecognisionModel():
     async def recognize_position_async(self, image):
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self.recognice_position, image)
-
-# image = cv2.imread("reinforce/images/train/position_2 (13).jpg")
-# t=ChessRecognisionModel("runs/yolo_phone/weights/best.pt", "runs/yolo_chess4_finetune/weights/best.pt")
-# print(t.recognice_position(image))

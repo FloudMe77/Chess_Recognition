@@ -1,4 +1,4 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.serialization
 
 import okhttp3.*
 import org.jsoup.Jsoup

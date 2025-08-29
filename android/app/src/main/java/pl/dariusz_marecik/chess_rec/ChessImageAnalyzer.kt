@@ -7,7 +7,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 
 class ChessImageAnalyzer(
-    private val piecesViewModel: PiecesViewModel
+    private val positionViewModel: PositionViewModel
 ) : ImageAnalysis.Analyzer {
 
     private var lastAnalysisTime = 0L
@@ -32,7 +32,7 @@ class ChessImageAnalyzer(
                     true
                 )
 
-                piecesViewModel.sendImage(rotatedBitmap)
+                positionViewModel.sendImage(rotatedBitmap)
                 lastAnalysisTime = currentTime
 
             } catch (e: Exception) {

@@ -1,8 +1,10 @@
+package pl.dariusz_marecik.chess_rec.websocketUtils
+
 import android.graphics.Bitmap
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import okio.ByteString
-import pl.dariusz_marecik.chess_rec.PieceInfo
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
 import java.io.ByteArrayOutputStream
 
 class WebSocketManager(private val url: String) {
@@ -15,6 +17,7 @@ class WebSocketManager(private val url: String) {
             webSocketClient.startWithRetry(url)
         }
     }
+
     private fun scaleBitmap(bitmap: Bitmap, maxSize: Int = 640): Bitmap {
         val ratio = minOf(maxSize.toFloat() / bitmap.width, maxSize.toFloat() / bitmap.height)
         val width = (bitmap.width * ratio).toInt()
@@ -41,6 +44,7 @@ class WebSocketManager(private val url: String) {
     fun getPieces(): StateFlow<Map<Pair<Int, Int>, PieceInfo>> {
         return webSocketClient.piecesMap
     }
+
     fun getConnectionStatus(): StateFlow<Boolean> {
         return webSocketClient.isConnected
     }

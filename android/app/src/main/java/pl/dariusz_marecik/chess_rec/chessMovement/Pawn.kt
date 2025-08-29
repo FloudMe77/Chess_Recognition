@@ -1,6 +1,9 @@
 package pl.dariusz_marecik.chess_rec.chessPieces
 
-import pl.dariusz_marecik.chess_rec.*
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
+import pl.dariusz_marecik.chess_rec.utils.plus
+import pl.dariusz_marecik.chess_rec.utils.times
 import kotlin.math.abs
 
 class Pawn:Piece {

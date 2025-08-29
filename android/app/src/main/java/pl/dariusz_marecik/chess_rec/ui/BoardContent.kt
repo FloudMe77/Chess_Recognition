@@ -1,4 +1,4 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.ui
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -13,10 +13,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.core.graphics.ColorUtils
+import pl.dariusz_marecik.chess_rec.utils.Move
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
+import pl.dariusz_marecik.chess_rec.R
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.enums.PieceKind
 
 @Composable
 fun BoardContent(
-    pieces: Map<Pair<Int, Int>,PieceInfo>,
+    pieces: Map<Pair<Int, Int>, PieceInfo>,
     modifier: Modifier = Modifier,
     previousMove: Move?,
     potentialMove: Move?,
@@ -40,16 +45,18 @@ fun BoardContent(
 
                         val baseColor = if (isLightSquare) lightSquareColor else darkSquareColor
 
-                        val boxPosition = Pair(colIndex, 7-rowIndex)
+                        val boxPosition = Pair(colIndex, 7 - rowIndex)
                         val squareColor = when {
                             potentialMove != null && (boxPosition == potentialMove.to || boxPosition == potentialMove.from) ->
                                 Color(
                                     ColorUtils.blendARGB(baseColor.toArgb(), highlightColorPotentialMove.toArgb(), 0.5f)
                                 )
+
                             previousMove != null && (boxPosition == previousMove.to || boxPosition == previousMove.from) ->
                                 Color(
                                     ColorUtils.blendARGB(baseColor.toArgb(), highlightColorPreviousMove.toArgb(), 0.5f)
                                 )
+
                             else -> baseColor
                         }
 
@@ -63,7 +70,9 @@ fun BoardContent(
                             contentAlignment = Alignment.Center
                         ) {
                             piece?.let {
-                                val rotationModifier = if(piece.color == ColorTeam.BLACK) Modifier.graphicsLayer { rotationZ = 180f } else Modifier
+                                val rotationModifier = if (piece.color == ColorTeam.BLACK) Modifier.graphicsLayer {
+                                    rotationZ = 180f
+                                } else Modifier
                                 val imageResource = when (it.name) {
                                     PieceKind.WHITE_PAWN -> R.drawable.white_pawn
                                     PieceKind.WHITE_ROOK -> R.drawable.white_rook
@@ -82,7 +91,7 @@ fun BoardContent(
                                     painter = painterResource(imageResource),
                                     contentDescription = "${it.position} (${it.id})",
                                     modifier = rotationModifier
-                                    )
+                                )
                             }
                         }
                     }

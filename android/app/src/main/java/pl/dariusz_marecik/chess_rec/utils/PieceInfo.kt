@@ -1,6 +1,8 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.utils
 
 import pl.dariusz_marecik.chess_rec.chessPieces.*
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.enums.PieceKind
 
 class PieceInfo(
     val id: Int,

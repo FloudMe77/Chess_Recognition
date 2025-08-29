@@ -2,7 +2,14 @@ package pl.dariusz_marecik.chess_rec
 
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.*
- class PositionManagerTest{
+import pl.dariusz_marecik.chess_rec.enums.Action
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.enums.PieceKind
+import pl.dariusz_marecik.chess_rec.utils.Move
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
+import pl.dariusz_marecik.chess_rec.utils.plus
+
+class PositionManagerTest{
   val normalPositionMap: MutableMap<Pair<Int,Int>, PieceInfo> = mutableMapOf(
    (0 to 6) to PieceInfo(6, "a7", emptyList()),
    (1 to 4) to PieceInfo(0, "b5", emptyList()),
@@ -100,7 +107,7 @@ import org.junit.jupiter.api.Assertions.*
     val allPairs = (0..7).flatMap { x -> (0..7).map { y -> x to y } }
     val unablePairs = allPairs - ablePairs
     for(to in ablePairs){
-     assertEquals(Move(from, to, piece.name,Action.MOVE), positionManager.findLegalMove(normalPositionMap, setOf(from), setOf(to)))
+     assertEquals(Move(from, to, piece.name, Action.MOVE), positionManager.findLegalMove(normalPositionMap, setOf(from), setOf(to)))
     }
     for(to in unablePairs){
      assertNull(positionManager.findLegalMove(normalPositionMap, setOf(from), setOf(to)))
@@ -145,7 +152,7 @@ import org.junit.jupiter.api.Assertions.*
    val positionManager = PositionManager(normalPositionMap)
    assertFalse(positionManager.isKingAttacked(normalPositionMap, ColorTeam.BLACK))
    assertTrue(positionManager.isKingAttacked(normalPositionMap, ColorTeam.WHITE))
-   assertEquals(Move(from, to, PieceKind.WHITE_PAWN,Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
+   assertEquals(Move(from, to, PieceKind.WHITE_PAWN, Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
   }
   @Test
   fun bishopTakeTest() {
@@ -164,7 +171,7 @@ import org.junit.jupiter.api.Assertions.*
     val positionManager = PositionManager(normalPositionMap, it.color)
     assertFalse(positionManager.isKingAttacked(normalPositionMap, ColorTeam.BLACK))
     assertTrue(positionManager.isKingAttacked(normalPositionMap, ColorTeam.WHITE))
-    assertEquals(Move(from, to, it.name,Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
+    assertEquals(Move(from, to, it.name, Action.TAKE), positionManager.findLegalMove(piecesMapAfter, setOf(from), setOf()))
    }?: run {
     fail("Brak figury na polu $from") // np. test ma się nie udać, jeśli brak
    }
@@ -215,7 +222,7 @@ import org.junit.jupiter.api.Assertions.*
 
   @Test
   fun onlyElPassantLegal(){
-   val positionManager = PositionManager(elPassantOnlyValidMove,ColorTeam.BLACK)
+   val positionManager = PositionManager(elPassantOnlyValidMove, ColorTeam.BLACK)
    positionManager.considerNewPosition(elPassantOnlyValidMove2)
    println(positionManager.acceptNewState())
    assertTrue(positionManager.haveAnyLegalMove(elPassantOnlyValidMove2))

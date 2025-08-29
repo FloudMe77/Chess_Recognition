@@ -1,4 +1,4 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.ui
 
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView

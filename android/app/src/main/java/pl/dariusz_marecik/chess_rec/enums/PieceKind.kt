@@ -1,4 +1,4 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.enums
 
 enum class PieceKind(val id: Int) {
     WHITE_PAWN(0),
@@ -24,6 +24,7 @@ enum class PieceKind(val id: Int) {
             WHITE_KING, BLACK_KING -> "K"
         }
     }
+
     fun getSymbolFen(): String {
         return when (this) {
             WHITE_PAWN, BLACK_PAWN -> "p"

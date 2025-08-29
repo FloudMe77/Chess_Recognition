@@ -1,3 +1,5 @@
+package pl.dariusz_marecik.chess_rec.websocketUtils
+
 import okhttp3.*
 import okio.ByteString
 import com.google.gson.Gson
@@ -8,7 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import pl.dariusz_marecik.chess_rec.PieceInfo
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
 import java.util.concurrent.TimeUnit
 
 

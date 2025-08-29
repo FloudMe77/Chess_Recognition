@@ -5,8 +5,11 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import pl.dariusz_marecik.chess_rec.enums.Action
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.enums.PieceKind
+import pl.dariusz_marecik.chess_rec.utils.*
 import java.lang.reflect.Modifier.PRIVATE
-import kotlin.collections.minus
 import kotlin.math.abs
 
 class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPlayerColor: ColorTeam = ColorTeam.WHITE) {
@@ -23,6 +26,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
     val isStaleMate: StateFlow<Boolean> = _isStaleMate.asStateFlow()
 
     private val castleMap: Map<ColorTeam, CastleInfo>
+
     init {
         _positionToDraw.value = startPosition
         castleMap = mapOf(
@@ -31,12 +35,12 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
         )
     }
 
-    private var previousPosition: Map<Pair<Int, Int>,PieceInfo> = startPosition
+    private var previousPosition: Map<Pair<Int, Int>, PieceInfo> = startPosition
     var onMove: ColorTeam = startingPlayerColor
         private set
 
     private var enPassant: Pair<Int, Int>? = null
-    private var potentialNewPosition: Map<Pair<Int, Int>,PieceInfo> = startPosition
+    private var potentialNewPosition: Map<Pair<Int, Int>, PieceInfo> = startPosition
     var potentialNewMove: Move? = null
         private set
 
@@ -47,7 +51,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
 //        Log.d("PositionManager", "fromPositions: $fromCordsSet, toPositions: $toCordsSet")
 //        Log.d("PositionManager", "onMove: $onMove")
 
-        if(fromCordsSet.isEmpty() && toCordsSet.isEmpty()) {
+        if (fromCordsSet.isEmpty() && toCordsSet.isEmpty()) {
             // undo changes
             potentialNewMove = null
             _isMoveFound.value = false
@@ -58,7 +62,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
         val potentialMove = findLegalMove(detectedPosition, fromCordsSet, toCordsSet) ?: return
 
         val (from, to, _, label) = potentialMove
-        if(potentialMove == potentialNewMove) return
+        if (potentialMove == potentialNewMove) return
         //
         val newPosition: MutableMap<Pair<Int, Int>, PieceInfo> =
             previousPosition.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
@@ -79,6 +83,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                     applyMove { movePositionMod(newPosition, piece, to) }
                 }
             }
+
             Action.PROMOTION -> {
                 newPosition.remove(from)?.let { piece ->
                     applyMove {
@@ -86,6 +91,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                     }
                 }
             }
+
             Action.TAKE -> {
                 newPosition.remove(from)?.let { piece ->
                     applyMove {
@@ -93,6 +99,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                     }
                 }
             }
+
             Action.EN_PASSANT -> {
                 newPosition.remove(from)?.let { piece ->
                     applyMove {
@@ -100,6 +107,7 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                     }
                 }
             }
+
             Action.CASTLE_LEFT, Action.CASTLE_RIGHT -> {
                 newPosition[from]?.let { king ->
                     val row = if (onMove == ColorTeam.WHITE) 0 else 7
@@ -197,16 +205,27 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                 val rook = previousPosition[rookPos]
                 val leftCastle = castleMap[onMove]?.left == true &&
                         rookPos == Pair(0, row) &&
-                        toCordsSet == setOf(Pair(2,row), Pair(3,row))
+                        toCordsSet == setOf(Pair(2, row), Pair(3, row))
                 val rightCastle = castleMap[onMove]?.right == true &&
                         rookPos == Pair(7, row) &&
-                        toCordsSet == setOf(Pair(5,row), Pair(6,row))
+                        toCordsSet == setOf(Pair(5, row), Pair(6, row))
                 if (rook != null) {
                     when {
-                        leftCastle && rook.movement.validateMove(Pair(0,row), Pair(3,row), previousPosition, onMove) ->
-                            return Move(kingPos, Pair(2,row), wantedKing, Action.CASTLE_LEFT)
-                        rightCastle && rook.movement.validateMove(Pair(7,row), Pair(5,row), previousPosition, onMove) ->
-                            return Move(kingPos, Pair(6,row), wantedKing, Action.CASTLE_RIGHT)
+                        leftCastle && rook.movement.validateMove(
+                            Pair(0, row),
+                            Pair(3, row),
+                            previousPosition,
+                            onMove
+                        ) ->
+                            return Move(kingPos, Pair(2, row), wantedKing, Action.CASTLE_LEFT)
+
+                        rightCastle && rook.movement.validateMove(
+                            Pair(7, row),
+                            Pair(5, row),
+                            previousPosition,
+                            onMove
+                        ) ->
+                            return Move(kingPos, Pair(6, row), wantedKing, Action.CASTLE_RIGHT)
                     }
                 }
             }
@@ -218,9 +237,10 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
             val to = toCordsSet.single()
             val piece = previousPosition[from]
             if (piece != null && !previousPosition.containsKey(to) && piece.color == onMove &&
-                piece.movement.validateMove(from, to, previousPosition, piece.color)) {
+                piece.movement.validateMove(from, to, previousPosition, piece.color)
+            ) {
                 return if (pawnPromotion(piece, to)) Move(from, to, piece.name, Action.PROMOTION)
-                else Move(from, to, piece.name ,Action.MOVE)
+                else Move(from, to, piece.name, Action.MOVE)
             }
         }
 
@@ -228,12 +248,17 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
         if (fromCordsSet.size == 1 && toCordsSet.isEmpty()) {
             val from = fromCordsSet.single()
             previousPosition[from]?.let { piece ->
-                if(piece.color == onMove){
+                if (piece.color == onMove) {
                     val possibleTakes = piece.movement.possibleTake(from, previousPosition, piece.color)
                     possibleTakes.firstOrNull { pos ->
                         previousPosition[pos]?.color != detectedPosition[pos]?.color
                     }?.let { capturePos ->
-                        return if (pawnPromotion(piece, capturePos)) Move(from, capturePos, piece.name, Action.PROMOTION)
+                        return if (pawnPromotion(piece, capturePos)) Move(
+                            from,
+                            capturePos,
+                            piece.name,
+                            Action.PROMOTION
+                        )
                         else Move(from, capturePos, piece.name, Action.TAKE)
                     }
                 }
@@ -251,9 +276,11 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
             if (whitePawn != null && blackPawn != null) {
                 val diff = blackPawn - whitePawn
                 if (onMove == ColorTeam.BLACK && whitePawn == enPassant && abs(diff.first) == 1 && diff.second == 0 &&
-                    to == whitePawn - Pair(0,1)) return Move(blackPawn, to, PieceKind.BLACK_PAWN, Action.EN_PASSANT)
+                    to == whitePawn - Pair(0, 1)
+                ) return Move(blackPawn, to, PieceKind.BLACK_PAWN, Action.EN_PASSANT)
                 if (onMove == ColorTeam.WHITE && blackPawn == enPassant && abs(diff.first) == 1 && diff.second == 0 &&
-                    to == blackPawn + Pair(0,1)) return Move(whitePawn,to, PieceKind.WHITE_PAWN, Action.EN_PASSANT)
+                    to == blackPawn + Pair(0, 1)
+                ) return Move(whitePawn, to, PieceKind.WHITE_PAWN, Action.EN_PASSANT)
             }
         }
 
@@ -274,12 +301,12 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun haveAnyLegalMove(positionToCheck: Map<Pair<Int, Int>,PieceInfo>): Boolean{
+    internal fun haveAnyLegalMove(positionToCheck: Map<Pair<Int, Int>, PieceInfo>): Boolean {
         println(positionToCheck.values.toString())
-        for(piece in positionToCheck.values){
-            if(piece.color == onMove){
+        for (piece in positionToCheck.values) {
+            if (piece.color == onMove) {
                 //move
-                for(possibleToCord in piece.movement.possibleMove(piece.cords, positionToCheck)){
+                for (possibleToCord in piece.movement.possibleMove(piece.cords, positionToCheck)) {
                     val newPosition: MutableMap<Pair<Int, Int>, PieceInfo> =
                         positionToCheck.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
 
@@ -287,18 +314,18 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                         movePositionMod(newPosition, it, possibleToCord)
                     }
 
-                    if(!isKingAttacked(newPosition, onMove)){
+                    if (!isKingAttacked(newPosition, onMove)) {
                         return true
                     }
                 }
                 //take
-                for(possibleToCord in piece.movement.possibleTake(piece.cords, positionToCheck, onMove)){
+                for (possibleToCord in piece.movement.possibleTake(piece.cords, positionToCheck, onMove)) {
                     val newPosition: MutableMap<Pair<Int, Int>, PieceInfo> =
                         positionToCheck.mapValues { (_, v) -> v.deepCopy() }.toMutableMap()
                     newPosition.remove(piece.cords)?.let {
                         takePositionMod(newPosition, it, possibleToCord)
                     }
-                    if(!isKingAttacked(newPosition, onMove)){
+                    if (!isKingAttacked(newPosition, onMove)) {
                         return true
                     }
                 }
@@ -332,7 +359,6 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
 
 
     fun acceptNewState(): Move? {
-//        Log.d("PositionManager", "zmieniam" )
         potentialNewMove?.let { move ->
             val (from, to) = move
             val pieceKind = move.pieceKind
@@ -344,20 +370,24 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                         Pair(7, 0) -> castleMap[ColorTeam.WHITE]?.right = false
                     }
                 }
+
                 PieceKind.BLACK_ROOK -> {
                     when (from) {
                         Pair(0, 7) -> castleMap[ColorTeam.BLACK]?.left = false
                         Pair(7, 7) -> castleMap[ColorTeam.BLACK]?.right = false
                     }
                 }
+
                 PieceKind.WHITE_KING -> {
                     castleMap[ColorTeam.WHITE]?.left = false
                     castleMap[ColorTeam.WHITE]?.right = false
                 }
+
                 PieceKind.BLACK_KING -> {
                     castleMap[ColorTeam.BLACK]?.left = false
                     castleMap[ColorTeam.BLACK]?.right = false
                 }
+
                 else -> {}
             }
 
@@ -367,24 +397,20 @@ class PositionManager(startPosition: Map<Pair<Int, Int>, PieceInfo>, startingPla
                 else -> null
             }
 
-//            if (enPassant != null) {
-//                Log.d("PositionManager2", "en_passant możliwe" + enPassant)
-//            }
         }
 
         previousPosition = potentialNewPosition
         val tmp = potentialNewMove
         potentialNewMove = null
         _isMoveFound.value = false
-        onMove = if(onMove == ColorTeam.WHITE) ColorTeam.BLACK else ColorTeam.WHITE
+        onMove = if (onMove == ColorTeam.WHITE) ColorTeam.BLACK else ColorTeam.WHITE
         // sprawdzanie mata
         Log.d("endGame", "Sprawdzam " + onMove)
-        if(!haveAnyLegalMove(previousPosition)){
-            if(isKingAttacked(previousPosition)){
+        if (!haveAnyLegalMove(previousPosition)) {
+            if (isKingAttacked(previousPosition)) {
                 Log.d("endGame", "MATE")
                 _isMate.value = true
-            }
-            else{
+            } else {
                 Log.d("endGame", "STALEMATE")
                 _isStaleMate.value = true
             }

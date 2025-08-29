@@ -1,5 +1,7 @@
+package pl.dariusz_marecik.chess_rec.serialization
 
-package pl.dariusz_marecik.chess_rec
+import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
 
 object FenConverter {
 

@@ -1,4 +1,8 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.serialization
+
+import pl.dariusz_marecik.chess_rec.enums.Action
+import pl.dariusz_marecik.chess_rec.utils.Move
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
 
 object PgnExporter {
 
@@ -21,8 +25,7 @@ object PgnExporter {
         moves.forEachIndexed { index, move ->
             if (move.pieceKind.name.startsWith("WHITE")) {
                 sb.append("${index / 2 + 1}. ")
-            }
-            else{
+            } else {
                 sb.append("${index / 2 + 1}... ")
             }
             sb.append(moveToLan(move))

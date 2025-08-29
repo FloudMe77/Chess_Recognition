@@ -1,28 +1,30 @@
 package pl.dariusz_marecik.chess_rec
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Bundle
+import android.view.WindowManager
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.camera.core.ExperimentalGetImage
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import android.view.WindowManager
-import androidx.compose.runtime.saveable.rememberSaveable
+import pl.dariusz_marecik.chess_rec.ui.CameraApp
+import pl.dariusz_marecik.chess_rec.ui.ClockApp
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 class MainActivity : ComponentActivity() {
 
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if(!hasRequiredPermissions()){
+        if (!hasRequiredPermissions()) {
             ActivityCompat.requestPermissions(
                 this, CAMERAX_PERMISSIONS, 0
             )
@@ -53,16 +55,15 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainApp(applicationContext: Context) {
         val isCameraView = rememberSaveable { mutableStateOf(false) }
-        val viewModel = viewModel<PiecesViewModel>()
-        if(isCameraView.value){
+        val viewModel = viewModel<PositionViewModel>()
+        if (isCameraView.value) {
             CameraApp(applicationContext, isCameraView, viewModel)
-        }
-        else{
+        } else {
             ClockApp(isCameraView, viewModel)
         }
 
 
-        }
     }
+}
 
 

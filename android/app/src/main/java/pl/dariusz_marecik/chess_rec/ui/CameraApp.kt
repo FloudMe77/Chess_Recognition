@@ -1,8 +1,9 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.ui
 
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.background
@@ -10,20 +11,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.compose.ui.platform.LocalConfiguration
-import android.content.res.Configuration
-
+import pl.dariusz_marecik.chess_rec.ChessImageAnalyzer
+import pl.dariusz_marecik.chess_rec.utils.PieceInfo
+import pl.dariusz_marecik.chess_rec.PositionViewModel
 
 
 @Composable
-fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, viewModel: PiecesViewModel) {
+fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) {
     val context = LocalContext.current
     val activity = context as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -48,10 +51,9 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
     val isConnected by viewModel.getConnectionStatus().collectAsState()
     val pieces by piecesFlow.collectAsState()
 
-    if(orientation == Configuration.ORIENTATION_LANDSCAPE){
+    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
         horizontalDrawer(isConnected, pieces, viewModel, isCameraView, controller)
-    }
-    else{
+    } else {
         verticalDrawer(isConnected, pieces, viewModel, isCameraView, controller)
     }
 }
@@ -60,7 +62,7 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
 private fun verticalDrawer(
     isConnected: Boolean,
     pieces: Map<Pair<Int, Int>, PieceInfo>,
-    viewModel: PiecesViewModel,
+    viewModel: PositionViewModel,
     isCameraView: MutableState<Boolean>,
     controller: LifecycleCameraController
 ) {
@@ -96,7 +98,7 @@ private fun verticalDrawer(
 private fun horizontalDrawer(
     isConnected: Boolean,
     pieces: Map<Pair<Int, Int>, PieceInfo>,
-    viewModel: PiecesViewModel,
+    viewModel: PositionViewModel,
     isCameraView: MutableState<Boolean>,
     controller: LifecycleCameraController
 ) {
