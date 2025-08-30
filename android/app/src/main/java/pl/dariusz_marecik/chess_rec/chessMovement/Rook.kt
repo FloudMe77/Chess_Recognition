@@ -7,26 +7,36 @@ class Rook: Piece {
     override fun validateMove(
         from: Pair<Int, Int>,
         to: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam
-    ): Boolean = abstractValidateMove(from, to, piecesPosition) { diff -> diff.first == 0 || diff.second == 0}
+    ): Boolean = abstractValidateMove(from, to, positionMap) {
+        diff ->
+        // vertical move
+        diff.first == 0
+            // horizontal move
+            || diff.second == 0
+    }
 
     override fun possibleTake(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
     ): List<Pair<Int, Int>> {
-        var possiblePositions = abstractPossibleTake(from, Pair(1, 0), piecesPosition)
-        possiblePositions += abstractPossibleTake(from, Pair(0, 1), piecesPosition)
+        // move (-)
+        var possiblePositions = abstractPossibleTake(from, Pair(1, 0), positionMap)
+        // move (|)
+        possiblePositions += abstractPossibleTake(from, Pair(0, 1), positionMap)
         return possiblePositions
     }
 
     override fun possibleMove(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>
+        positionMap: Map<Pair<Int, Int>, PieceInfo>
     ): List<Pair<Int, Int>> {
-        var possiblePositions = abstractPossibleMove(from, Pair(1, 0), piecesPosition)
-        possiblePositions += abstractPossibleMove(from, Pair(0, 1), piecesPosition)
+        // move (-)
+        var possiblePositions = abstractPossibleMove(from, Pair(1, 0), positionMap)
+        // move (|)
+        possiblePositions += abstractPossibleMove(from, Pair(0, 1), positionMap)
         return possiblePositions
     }
 }

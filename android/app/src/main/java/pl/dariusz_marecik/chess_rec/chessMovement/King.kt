@@ -9,47 +9,46 @@ class King: Piece {
     override fun validateMove(
         from: Pair<Int, Int>,
         to: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
-    ) = abstractValidateMove(from, to, piecesPosition) { diff -> abs(diff.first) < 2 && abs(diff.second) < 2 }
+    ) = abstractValidateMove(from, to, positionMap) {
+        // move in distance equals 1
+        diff -> abs(diff.first) < 2 && abs(diff.second) < 2
+    }
 
     override fun possibleTake(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
     ): List<Pair<Int, Int>> {
-        val possiblePositions = mutableListOf<Pair<Int, Int>>()
-        val colorOfPiece = piecesPosition[from]?.color ?: return possiblePositions
-        for (i in -1..1){
-            for (j in -1..1){
-                if(i==j && i==0) continue
-                val versor = Pair(i, j)
-                val newPosition = from + versor
-                if(isOnMap(newPosition)){
-                    val pieceAtNewPos = piecesPosition[newPosition]
-                    if (pieceAtNewPos != null && pieceAtNewPos.color != colorOfPiece) {
-                        possiblePositions.add(newPosition)
-                    }
-                }
+        val colorOfPiece = positionMap[from]?.color ?: return mutableListOf()
+        // for every place where distance equals 1
+        val directions = (-1..1).flatMap { i -> (-1..1).map { j -> Pair(i, j) } }
+            .filter { it != Pair(0, 0) }
+
+        val possiblePositions = directions
+            .map { from + it }
+            .filter { isOnMap(it) }
+            .filter {
+                // color different then taken piece
+                positionMap[it]?.color != colorOfPiece && positionMap[it] != null
             }
-        }
+
         return possiblePositions
     }
     override fun possibleMove(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
     ): List<Pair<Int, Int>> {
-        val possiblePositions = mutableListOf<Pair<Int, Int>>()
-        for (i in -1..1){
-            for (j in -1..1){
-                if(i==j && i==0) continue
-                val versor = Pair(i, j)
-                val newPosition = from + versor
-                if(isOnMap(newPosition) && !piecesPosition.containsKey(newPosition)){
-                    possiblePositions.add(newPosition)
-                }
-            }
-        }
+        // for every place where distance equals 1
+        val directions = (-1..1).flatMap { i -> (-1..1).map { j -> Pair(i, j) } }
+            .filter { it != Pair(0, 0) }
+
+        val possiblePositions = directions
+            .map { from + it }
+            // place is free
+            .filter { isOnMap(it) && !positionMap.containsKey(it) }
+
         return possiblePositions
     }
 }

@@ -21,7 +21,7 @@ import pl.dariusz_marecik.chess_rec.enums.PieceKind
 
 @Composable
 fun BoardContent(
-    pieces: Map<Pair<Int, Int>, PieceInfo>,
+    positionMap: Map<Pair<Int, Int>, PieceInfo>,
     modifier: Modifier = Modifier,
     previousMove: Move?,
     potentialMove: Move?,
@@ -30,7 +30,8 @@ fun BoardContent(
     val darkSquareColor = Color(0xFF769656)
     val highlightColorPreviousMove = Color(0x80FFD700)
     val highlightColorPotentialMove = Color(0x8033B5E5)
-    Log.d("BoardContent", pieces.toString())
+    Log.d("BoardContent", positionMap.toString())
+    // Container box for the board
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
 
@@ -42,10 +43,10 @@ fun BoardContent(
                 Row(modifier = Modifier.weight(1f)) {
                     repeat(8) { colIndex ->
                         val isLightSquare = (rowIndex + colIndex) % 2 == 0
-
                         val baseColor = if (isLightSquare) lightSquareColor else darkSquareColor
-
                         val boxPosition = Pair(colIndex, 7 - rowIndex)
+
+                        // Determine square color with highlighting
                         val squareColor = when {
                             potentialMove != null && (boxPosition == potentialMove.to || boxPosition == potentialMove.from) ->
                                 Color(
@@ -60,8 +61,9 @@ fun BoardContent(
                             else -> baseColor
                         }
 
-                        val piece = pieces[boxPosition]
+                        val piece = positionMap[boxPosition]
 
+                        // Individual square box
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -70,9 +72,11 @@ fun BoardContent(
                             contentAlignment = Alignment.Center
                         ) {
                             piece?.let {
+                                // Rotate black pieces 180 degrees
                                 val rotationModifier = if (piece.color == ColorTeam.BLACK) Modifier.graphicsLayer {
                                     rotationZ = 180f
                                 } else Modifier
+
                                 val imageResource = when (it.name) {
                                     PieceKind.WHITE_PAWN -> R.drawable.white_pawn
                                     PieceKind.WHITE_ROOK -> R.drawable.white_rook
@@ -87,6 +91,7 @@ fun BoardContent(
                                     PieceKind.BLACK_QUEEN -> R.drawable.black_queen
                                     PieceKind.BLACK_KING -> R.drawable.black_king
                                 }
+                                // Display piece image
                                 Image(
                                     painter = painterResource(imageResource),
                                     contentDescription = "${it.position} (${it.id})",

@@ -1,11 +1,13 @@
-package pl.dariusz_marecik.chess_rec
+package pl.dariusz_marecik.chess_rec.utils
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import pl.dariusz_marecik.chess_rec.viewmodel.PositionViewModel
 
+// Analyzes camera frames and sends rotated bitmap images to the ViewModel
 class ChessImageAnalyzer(
     private val positionViewModel: PositionViewModel
 ) : ImageAnalysis.Analyzer {

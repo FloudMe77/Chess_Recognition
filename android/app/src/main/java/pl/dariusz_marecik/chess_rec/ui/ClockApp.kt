@@ -24,11 +24,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import pl.dariusz_marecik.chess_rec.*
 import pl.dariusz_marecik.chess_rec.enums.ColorTeam
+import pl.dariusz_marecik.chess_rec.game.PositionManager
 import pl.dariusz_marecik.chess_rec.serialization.LichessConverter
 import pl.dariusz_marecik.chess_rec.serialization.PgnExporter
 import pl.dariusz_marecik.chess_rec.utils.PieceInfo
+import pl.dariusz_marecik.chess_rec.viewmodel.PositionViewModel
 
 private fun onPlayClick(
     gameStarted: MutableState<Boolean>,
@@ -36,6 +37,7 @@ private fun onPlayClick(
     positionManager: MutableState<PositionManager?>,
     startPosition: MutableState<Map<Pair<Int, Int>, PieceInfo>?>
 ) {
+    // Handles the play button logic for starting or making a move in the game
     if (!gameStarted.value) {
         startPosition.value = viewModel.pieces.value
         positionManager.value = PositionManager(viewModel.pieces.value)
@@ -59,6 +61,7 @@ private fun onRestartClick(
     startPosition: MutableState<Map<Pair<Int, Int>, PieceInfo>?>,
     viewModel: PositionViewModel
 ) {
+    // Resets the game state and clears all moves
     gameStarted.value = false
     positionManager.value = null
     startPosition.value = null
@@ -67,6 +70,7 @@ private fun onRestartClick(
 
 @Composable
 fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) {
+    // Main UI for the chess clock and board interface
     val positionManager = remember { mutableStateOf<PositionManager?>(null) }
     val showDialog = remember { mutableStateOf(false) }
     val gameUrl = remember { mutableStateOf("") }
@@ -79,7 +83,8 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
     val isMate = positionManager.value?.isMate?.collectAsState(initial = false)?.value ?: false
     val isStaleMate = positionManager.value?.isStaleMate?.collectAsState(initial = false)?.value ?: false
 
-    val piecesFlow = remember(positionManager.value, gameStarted.value) {
+    // Determine which piece positions to display based on game state
+    val positionMapFlow = remember(positionManager.value, gameStarted.value) {
         if (gameStarted.value && positionManager.value != null) {
             positionManager.value!!.positionToDraw
         } else {
@@ -87,13 +92,14 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
         }
     }
 
-    val pieces by piecesFlow.collectAsState()
-    val piecesFollow by viewModel.pieces.collectAsState()
+    val positionMap by positionMapFlow.collectAsState()
+    val cameraPositionMap by viewModel.pieces.collectAsState()
     val isConnected by viewModel.getConnectionStatus().collectAsState()
 
     val activeButtonColor = Color(0xFF7ABC56)
     val deActiveButtonColor = Color(0xFF696969)
 
+    // Main layout container
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -106,6 +112,7 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
+            // Configure player button colors based on game state
             val blackPlayerButtonColor = when {
                 !gameStarted.value -> activeButtonColor
                 positionManager.value?.onMove == ColorTeam.BLACK -> activeButtonColor
@@ -118,6 +125,8 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
             }
             val blackPlayerFontColor = if (blackPlayerButtonColor == activeButtonColor) Color.Black else Color.White
             val whitePlayerFontColor = if (whitePlayerButtonColor == activeButtonColor) Color.Black else Color.White
+
+            // Black player button
             Button(
                 onClick = {
                     if (!gameStarted.value || positionManager.value?.onMove == ColorTeam.BLACK) onPlayClick(
@@ -135,12 +144,14 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
 
             ) {
                 Text(
-                    "Black Player",
+                    if(gameStarted.value) "Black Player" else "Accept position",
                     modifier = Modifier.graphicsLayer { rotationZ = 180f },
                     fontSize = 20.sp,
                     color = blackPlayerFontColor
                 )
             }
+
+            // Main row with board and side buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -151,8 +162,7 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
                 Column(
                     modifier = Modifier,
                 ) {
-                    // next
-
+                    // Connection indicator
                     Box(
                         modifier = Modifier
                             .size(70.dp) // średnica
@@ -160,7 +170,7 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
                             .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
                     )
 
-                    //save
+                    // Save game button
                     IconButton(
                         onClick = {
                             calcGameUrl(gameStarted, viewModel, startPosition, gameUrl, showDialog)
@@ -173,22 +183,23 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
                     }
                 }
 
+                // Board display
                 BoardContent(
-                    pieces,
+                    positionMap,
                     modifier = Modifier.weight(1f),
                     viewModel.getLatestMove(),
                     positionManager.value?.potentialNewMove
                 )
 
                 Column {
-                    // reset
+                    // Restart button
                     IconButton(
                         onClick = { onRestartClick(gameStarted, positionManager, startPosition, viewModel) },
                         modifier = Modifier.size(70.dp)
                     ) {
                         Icon(Icons.Default.Close, contentDescription = "Restart")
                     }
-                    //
+                    // Switch camera/view mode button
                     IconButton(
                         onClick = { isCameraView.value = !isCameraView.value },
                         modifier = Modifier.size(70.dp)
@@ -198,6 +209,7 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
 
                 }
             }
+            // White player button
             Button(
                 onClick = {
                     if (!gameStarted.value || positionManager.value?.onMove == ColorTeam.WHITE) onPlayClick(
@@ -216,14 +228,18 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
                 )
 
             ) {
-                Text("White Player", fontSize = 20.sp, color = whitePlayerFontColor)
+                Text(if(gameStarted.value) "White Player" else "Accept position", fontSize = 20.sp, color = whitePlayerFontColor)
             }
         }
 
     }
-    LaunchedEffect(positionManager.value, piecesFollow) {
-        positionManager.value?.considerNewPosition(piecesFollow)
+
+    // Monitor board changes and update potential move detection
+    LaunchedEffect(positionManager.value, cameraPositionMap) {
+        positionManager.value?.considerNewPosition(cameraPositionMap)
     }
+
+    // Show mate notification when detected
     LaunchedEffect(isMate) {
         if (isMate) {
             messageForDialog.value = "Mate!! \nLink to the chess game: "
@@ -231,6 +247,8 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
 
         }
     }
+
+    // Show stalemate notification when detected
     LaunchedEffect(isStaleMate) {
         if (isStaleMate) {
             messageForDialog.value = "Stalemate!! \nLink to the chess game:"
@@ -239,6 +257,7 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
         }
     }
 
+    // Display the notification dialog if required
     if (showDialog.value) {
         showNotification(gameUrl.value, context, messageForDialog.value, showDialog)
     }
@@ -253,6 +272,7 @@ private fun calcGameUrl(
     gameUrl: MutableState<String>,
     showDialog: MutableState<Boolean>
 ) {
+    // Generate PGN and get Lichess game URL
     if (gameStarted.value) {
         val pgn = PgnExporter.export(viewModel.moveList.value, startPosition.value!!)
         LichessConverter.importPgnToLichess(pgn) { url ->
@@ -271,6 +291,7 @@ private fun showNotification(
     communicate: String,
     showDialog: MutableState<Boolean>
 ) {
+    // Display an alert dialog with clickable game URL
     if (showDialog.value) {
         AlertDialog(
             onDismissRequest = { showDialog.value = false },

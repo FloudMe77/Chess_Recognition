@@ -8,31 +8,45 @@ class Queen:Piece {
     override fun validateMove(
         from: Pair<Int, Int>,
         to: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam
-    ): Boolean = abstractValidateMove(from, to, piecesPosition) { diff -> abs(diff.first) == abs(diff.second)
-            || diff.first == 0 || diff.second == 0}
+    ): Boolean = abstractValidateMove(from, to, positionMap) {
+        diff ->
+        // diagonal move
+        abs(diff.first) == abs(diff.second)
+            // vertical move
+            || diff.first == 0
+            // horizontal move
+            || diff.second == 0}
 
     override fun possibleTake(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
     ): List<Pair<Int, Int>> {
-        val possiblePositions = abstractPossibleTake(from, Pair(1, 1), piecesPosition).toMutableList()
-        possiblePositions += abstractPossibleTake(from, Pair(1, -1), piecesPosition)
-        possiblePositions += abstractPossibleTake(from, Pair(1, 0), piecesPosition)
-        possiblePositions += abstractPossibleTake(from, Pair(0, 1), piecesPosition)
+        // move (/)
+        val possiblePositions = abstractPossibleTake(from, Pair(1, 1), positionMap).toMutableList()
+        // move (\)
+        possiblePositions += abstractPossibleTake(from, Pair(1, -1), positionMap)
+        // move (-)
+        possiblePositions += abstractPossibleTake(from, Pair(1, 0), positionMap)
+        // move (|)
+        possiblePositions += abstractPossibleTake(from, Pair(0, 1), positionMap)
         return possiblePositions
     }
 
     override fun possibleMove(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>
+        positionMap: Map<Pair<Int, Int>, PieceInfo>
     ): List<Pair<Int, Int>> {
-        val possiblePositions = abstractPossibleMove(from, Pair(1, 1), piecesPosition).toMutableList()
-        possiblePositions += abstractPossibleMove(from, Pair(1, -1), piecesPosition)
-        possiblePositions += abstractPossibleMove(from, Pair(1, 0), piecesPosition)
-        possiblePositions += abstractPossibleMove(from, Pair(0, 1), piecesPosition)
+        // move (/)
+        val possiblePositions = abstractPossibleMove(from, Pair(1, 1), positionMap).toMutableList()
+        // move (\)
+        possiblePositions += abstractPossibleMove(from, Pair(1, -1), positionMap)
+        // move (-)
+        possiblePositions += abstractPossibleMove(from, Pair(1, 0), positionMap)
+        // move (|)
+        possiblePositions += abstractPossibleMove(from, Pair(0, 1), positionMap)
         return possiblePositions
     }
 }

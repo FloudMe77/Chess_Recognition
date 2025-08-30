@@ -20,13 +20,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import pl.dariusz_marecik.chess_rec.ChessImageAnalyzer
+import pl.dariusz_marecik.chess_rec.utils.ChessImageAnalyzer
 import pl.dariusz_marecik.chess_rec.utils.PieceInfo
-import pl.dariusz_marecik.chess_rec.PositionViewModel
+import pl.dariusz_marecik.chess_rec.viewmodel.PositionViewModel
 
 
 @Composable
 fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) {
+    // Main composable for the camera view, switching layout based on orientation
     val context = LocalContext.current
     val activity = context as Activity
     activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -35,11 +36,13 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
 
     val controller = remember {
         LifecycleCameraController(applicationContext).apply {
+            // Configure camera controller with analysis and video capture
             setEnabledUseCases(
                 CameraController.IMAGE_ANALYSIS or
                         CameraController.VIDEO_CAPTURE
             )
 
+            // Set analyzer to process frames for chess recognition
             setImageAnalysisAnalyzer(
                 ContextCompat.getMainExecutor(applicationContext),
                 ChessImageAnalyzer(viewModel)
@@ -51,6 +54,7 @@ fun CameraApp(applicationContext: Context, isCameraView: MutableState<Boolean>, 
     val isConnected by viewModel.getConnectionStatus().collectAsState()
     val pieces by piecesFlow.collectAsState()
 
+    // Switch layout based on device orientation
     if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
         horizontalDrawer(isConnected, pieces, viewModel, isCameraView, controller)
     } else {
@@ -66,25 +70,30 @@ private fun verticalDrawer(
     isCameraView: MutableState<Boolean>,
     controller: LifecycleCameraController
 ) {
+    // Layout for portrait orientation with board on top and camera below
     Column(Modifier.fillMaxSize()) {
         Row(modifier = Modifier.weight(1f).background(Color.LightGray)) {
+            // Status indicator for connection
             Box(
                 modifier = Modifier
                     .size(70.dp)
                     .padding(25.dp)
                     .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
             )
+            // Chess board content
             BoardContent(
                 pieces,
                 modifier = Modifier.weight(1f),
                 viewModel.getLatestMove(),
                 null
             )
+            // Button to switch camera/board view
             IconButton(onClick = { isCameraView.value = !isCameraView.value }, modifier = Modifier.size(70.dp)) {
                 Icon(Icons.Default.Settings, contentDescription = "Change mode")
             }
         }
 
+        // Camera preview section
         Box(modifier = Modifier.weight(4f)) {
             CameraPreview(
                 controller = controller,
@@ -102,25 +111,30 @@ private fun horizontalDrawer(
     isCameraView: MutableState<Boolean>,
     controller: LifecycleCameraController
 ) {
+    // Layout for landscape orientation with board on left and camera on right
     Row(Modifier.fillMaxSize()) {
         Column(modifier = Modifier.weight(1f).background(Color.LightGray)) {
+            // Status indicator for connection
             Box(
                 modifier = Modifier
                     .size(70.dp)
                     .padding(25.dp)
                     .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
             )
+            // Chess board content
             BoardContent(
                 pieces,
                 modifier = Modifier.weight(1f),
                 viewModel.getLatestMove(),
                 null
             )
+            // Button to switch camera/board view
             IconButton(onClick = { isCameraView.value = !isCameraView.value }, modifier = Modifier.size(70.dp)) {
                 Icon(Icons.Default.Settings, contentDescription = "Change mode")
             }
         }
 
+        // Camera preview section
         Box(modifier = Modifier.weight(4f)) {
             CameraPreview(
                 controller = controller,

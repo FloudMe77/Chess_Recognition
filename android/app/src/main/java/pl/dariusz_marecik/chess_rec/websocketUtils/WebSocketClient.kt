@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit
 
 class WebSocketClient : WebSocketListener() {
 
+    // OkHttp client with ping interval for connection keep-alive
     private val client = OkHttpClient.Builder()
         .pingInterval(2, TimeUnit.SECONDS)
         .build()
@@ -27,11 +28,12 @@ class WebSocketClient : WebSocketListener() {
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
 
-    private var _piecesMap = MutableStateFlow<Map<Pair<Int, Int>, PieceInfo>>(emptyMap())
-    val piecesMap: StateFlow<Map<Pair<Int, Int>, PieceInfo>> = _piecesMap.asStateFlow()
+    private var _positionMap = MutableStateFlow<Map<Pair<Int, Int>, PieceInfo>>(emptyMap())
+    val positionMap: StateFlow<Map<Pair<Int, Int>, PieceInfo>> = _positionMap.asStateFlow()
 
     private val gson = Gson()
 
+    // Attempt to connect to WebSocket with retry on failure
     fun startWithRetry(url: String) {
         Log.d("WebSocket", "Trying to connect")
         try {
@@ -40,6 +42,7 @@ class WebSocketClient : WebSocketListener() {
         }
     }
 
+    // Establish a WebSocket connection
     fun connect(url: String) {
         val request = Request.Builder()
             .url(url)
@@ -47,6 +50,7 @@ class WebSocketClient : WebSocketListener() {
         webSocket = client.newWebSocket(request, this)
     }
 
+    // Send binary data over WebSocket if connected
     fun sendBytes(byteString: ByteString) {
         if (_isConnected.value) {
             webSocket.send(byteString)
@@ -54,17 +58,20 @@ class WebSocketClient : WebSocketListener() {
         }
     }
 
+    // Close the WebSocket and cancel coroutines
     fun disconnect() {
         _isConnected.value = false
         scope.cancel() // zatrzymuje coroutines
         webSocket.close(1000, "Normal close")
     }
 
+    // Called when WebSocket connection is successfully opened
     override fun onOpen(webSocket: WebSocket, response: Response) {
         Log.d("WebSocket", "Connected to server")
         _isConnected.value = true
     }
 
+    // Called when a text message is received; parse JSON to update pieces
     override fun onMessage(webSocket: WebSocket, text: String) {
         if (!_isConnected.value) return
         try {
@@ -72,7 +79,7 @@ class WebSocketClient : WebSocketListener() {
             val piecesList: List<PieceInfo> = gson.fromJson(text, listType)
 
             val newPiecesMap = piecesList.associateBy { it.cords }
-            _piecesMap.value = newPiecesMap
+            _positionMap.value = newPiecesMap
 
             piecesList.forEach { Log.d("WebSocket", "JSON: ${it.name} ${it.cords}") }
 
@@ -97,6 +104,7 @@ class WebSocketClient : WebSocketListener() {
         attemptReconnect(webSocket.request().url.toString())
     }
 
+    // Attempt to reconnect after a delay if not already reconnecting
     private fun attemptReconnect(url: String) {
         if (isReconnecting) return
         isReconnecting = true

@@ -10,8 +10,8 @@ import org.jsoup.Jsoup
 class PgnExporterTest(){
     fun extractLichessLink(html: String): String? {
         val doc = Jsoup.parse(html)
-        val metaTag = doc.selectFirst("meta[property=og:url]")  // wybiera pierwszy meta tag z og:url
-        return metaTag?.attr("content")  // zwraca zawartość atrybutu content, czyli link
+        val metaTag = doc.selectFirst("meta[property=og:url]") 
+        return metaTag?.attr("content")
     }
     fun importPgnToLichess(pgn: String, onResult: (String?) -> Unit) {
         val client = OkHttpClient()
@@ -74,10 +74,4 @@ class PgnExporterTest(){
 
         latch.await()  // czeka aż callback się wykona
     }
-//    val pgnExporter = PgnExporter()
-//    @Test
-//    fun testPGN(){
-//        println(pgnExporter.export(testMoves))
-//    }
-
 }

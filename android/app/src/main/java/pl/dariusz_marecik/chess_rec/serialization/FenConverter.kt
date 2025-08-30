@@ -4,15 +4,15 @@ import pl.dariusz_marecik.chess_rec.enums.ColorTeam
 import pl.dariusz_marecik.chess_rec.utils.PieceInfo
 
 object FenConverter {
-
-    fun mapToFen(piecesMap: Map<Pair<Int, Int>, PieceInfo>): String {
+    // convert positionMap into String with saved Fen position
+    fun mapToFen(positionMap: Map<Pair<Int, Int>, PieceInfo>): String {
         val rows = mutableListOf<String>()
 
         for (rank in 7 downTo 0) {
             var rowFen = ""
             var emptyCount = 0
             for (file in 0..7) {
-                val pieceInfo = piecesMap[Pair(file, rank)]
+                val pieceInfo = positionMap[Pair(file, rank)]
                 if (pieceInfo != null) {
                     if (emptyCount > 0) {
                         rowFen += emptyCount.toString()

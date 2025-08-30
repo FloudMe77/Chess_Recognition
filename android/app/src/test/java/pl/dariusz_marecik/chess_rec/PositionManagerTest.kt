@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.*
 import pl.dariusz_marecik.chess_rec.enums.Action
 import pl.dariusz_marecik.chess_rec.enums.ColorTeam
 import pl.dariusz_marecik.chess_rec.enums.PieceKind
+import pl.dariusz_marecik.chess_rec.game.PositionManager
 import pl.dariusz_marecik.chess_rec.utils.Move
 import pl.dariusz_marecik.chess_rec.utils.PieceInfo
 import pl.dariusz_marecik.chess_rec.utils.plus

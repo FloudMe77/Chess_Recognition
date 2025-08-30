@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.dariusz_marecik.chess_rec.ui.CameraApp
 import pl.dariusz_marecik.chess_rec.ui.ClockApp
+import pl.dariusz_marecik.chess_rec.viewmodel.PositionViewModel
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 class MainActivity : ComponentActivity() {
@@ -56,13 +57,12 @@ class MainActivity : ComponentActivity() {
     fun MainApp(applicationContext: Context) {
         val isCameraView = rememberSaveable { mutableStateOf(false) }
         val viewModel = viewModel<PositionViewModel>()
+        // Switch between CameraApp and ClockApp based on state
         if (isCameraView.value) {
             CameraApp(applicationContext, isCameraView, viewModel)
         } else {
             ClockApp(isCameraView, viewModel)
         }
-
-
     }
 }
 

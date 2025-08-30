@@ -15,7 +15,7 @@ fun CameraPreview(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // 👇 gwarantuje, że bindToLifecycle zostanie wywołane tylko raz, gdy lifecycleOwner się pojawi
+    // Ensure bindToLifecycle is called only once when the lifecycleOwner is available
     LaunchedEffect(controller, lifecycleOwner) {
         controller.bindToLifecycle(lifecycleOwner)
     }

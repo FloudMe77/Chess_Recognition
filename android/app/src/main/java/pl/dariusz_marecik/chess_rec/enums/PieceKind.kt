@@ -1,5 +1,6 @@
 package pl.dariusz_marecik.chess_rec.enums
 
+// Represents all chess piece types, with unique IDs and PGN/FEN symbols
 enum class PieceKind(val id: Int) {
     WHITE_PAWN(0),
     WHITE_ROOK(1),
@@ -14,6 +15,7 @@ enum class PieceKind(val id: Int) {
     BLACK_QUEEN(10),
     BLACK_KING(11);
 
+    // Returns the PGN symbol for this piece (empty for pawns)
     fun getSymbolPgn(): String {
         return when (this) {
             WHITE_PAWN, BLACK_PAWN -> ""
@@ -25,6 +27,7 @@ enum class PieceKind(val id: Int) {
         }
     }
 
+    // Returns the FEN symbol for this piece (lowercase for black)
     fun getSymbolFen(): String {
         return when (this) {
             WHITE_PAWN, BLACK_PAWN -> "p"

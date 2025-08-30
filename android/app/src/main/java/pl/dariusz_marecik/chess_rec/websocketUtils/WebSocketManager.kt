@@ -12,12 +12,14 @@ class WebSocketManager(private val url: String) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val webSocketClient = WebSocketClient()
 
+    // Start the WebSocket client
     fun start() {
         scope.launch {
             webSocketClient.startWithRetry(url)
         }
     }
 
+    // Scale the bitmap to a maximum dimension while keeping aspect ratio
     private fun scaleBitmap(bitmap: Bitmap, maxSize: Int = 640): Bitmap {
         val ratio = minOf(maxSize.toFloat() / bitmap.width, maxSize.toFloat() / bitmap.height)
         val width = (bitmap.width * ratio).toInt()
@@ -25,6 +27,7 @@ class WebSocketManager(private val url: String) {
         return Bitmap.createScaledBitmap(bitmap, width, height, true)
     }
 
+    // Send a bitmap image to the WebSocket server
     fun sendImage(bitmap: Bitmap) {
         scope.launch {
             val scaledBitmap = scaleBitmap(bitmap, 640)
@@ -36,15 +39,18 @@ class WebSocketManager(private val url: String) {
         }
     }
 
+    // Stop the WebSocket and cancel all coroutines
     fun stop() {
         scope.cancel()
         webSocketClient.disconnect()
     }
 
-    fun getPieces(): StateFlow<Map<Pair<Int, Int>, PieceInfo>> {
-        return webSocketClient.piecesMap
+    // Expose current pieces state from the WebSocket client
+    fun getPosition(): StateFlow<Map<Pair<Int, Int>, PieceInfo>> {
+        return webSocketClient.positionMap
     }
 
+    // Expose current connection status from the WebSocket client
     fun getConnectionStatus(): StateFlow<Boolean> {
         return webSocketClient.isConnected
     }

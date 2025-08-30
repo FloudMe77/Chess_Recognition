@@ -12,50 +12,42 @@ class Knight:Piece {
     override fun validateMove(
         from: Pair<Int, Int>,
         to: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
     ): Boolean{
         val diff = to - from
-        return (abs(diff.first) == 2 && abs(diff.second) == 1) || (abs(diff.first) == 1 && abs(diff.second) == 2) }
+        // knight validation move
+        return (abs(diff.first) == 2 && abs(diff.second) == 1) || (abs(diff.first) == 1 && abs(diff.second) == 2)
+    }
 
     override fun possibleTake(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
         colorTeam: ColorTeam,
     ): List<Pair<Int, Int>> {
-        val possiblePositions = mutableListOf<Pair<Int, Int>>()
-        val colorOfPiece = piecesPosition[from]?.color ?: return possiblePositions
-        for(direction in listOf(Pair(1, 2), Pair(2, 1))) {
-            for (sgnX in listOf(-1, +1)){
-                for(sgnY in listOf(-1, +1)){
-                    val newPosition = from + (direction * Pair(sgnX, sgnY))
-                    if(isOnMap(newPosition)){
-                        val pieceAtNewPos = piecesPosition[newPosition]
-                        if (pieceAtNewPos != null && pieceAtNewPos.color != colorOfPiece) {
-                            possiblePositions.add(newPosition)
-                        }
-                    }
-                }
-            }
-        }
+        val colorOfPiece = positionMap[from]?.color ?: return mutableListOf()
+        val directions = listOf(Pair(1, 2), Pair(2, 1))
+        val signs = listOf(-1, 1)
+
+        val possiblePositions = directions
+            // all cords, where can potential move
+            .flatMap { d -> signs.flatMap { sx -> signs.map { sy -> d * Pair(sx, sy) } } }
+            .map { from + it }
+            // can take
+            .filter { isOnMap(it) && positionMap[it]?.color != colorOfPiece && positionMap[it] != null }
+
         return possiblePositions
     }
 
     override fun possibleMove(
         from: Pair<Int, Int>,
-        piecesPosition: Map<Pair<Int, Int>, PieceInfo>,
+        positionMap: Map<Pair<Int, Int>, PieceInfo>,
     ): List<Pair<Int, Int>> {
-        val possibleCords = mutableListOf<Pair<Int, Int>>()
-        for(direction in listOf(Pair(1, 2), Pair(2, 1))) {
-            for (sgnX in listOf(-1, +1)){
-                for(sgnY in listOf(-1, +1)){
-                    val newCords = from + (direction * Pair(sgnX, sgnY))
-                    if(isOnMap(newCords) && !piecesPosition.containsKey(newCords)){
-                        possibleCords.add(newCords)
-                    }
-                }
-            }
-        }
+        val possibleCords = listOf(Pair(1, 2), Pair(2, 1))
+            .flatMap { d -> listOf(-1, 1).flatMap { sx -> listOf(-1, 1).map { sy -> from + (d * Pair(sx, sy)) } } }
+            // can move
+            .filter { isOnMap(it) && !positionMap.containsKey(it) }
+
         return possibleCords
     }
 }
