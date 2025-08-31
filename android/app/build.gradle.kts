@@ -9,11 +9,11 @@ val localProperties = Properties().apply {
 }
 
 android {
-    namespace = "pl.dariusz_marecik.chess_rec"
+    namespace = "com.example.chessLens"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "pl.dariusz_marecik.chess_rec"
+        applicationId = "com.example.chessLens"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
