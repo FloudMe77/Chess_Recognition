@@ -1,3 +1,6 @@
 *.txt
 *.jpg
 *.cache
+
+!**/README.dataset.txt
+!**/README.roboflow.txt
