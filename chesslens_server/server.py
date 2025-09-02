@@ -21,22 +21,27 @@ async def on_image_received(image):
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     connected_clients.add(websocket)
-    print("Połączono nowe urządzenie")
+    print("New client connected")
     try:
         while True:
             
             message = await websocket.receive_bytes()
-            print("otrzymałem wiadomość", time.localtime())
+            print("massage getted", time.localtime())
+            # time maserment start
             start_time = time.time()
+
             nparr = np.frombuffer(message, np.uint8)
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
             results = await on_image_received(image)
 
             json_results = json.dumps(results)
-            end_time = time.time()  # koniec pomiaru
+
+            # time maserment end
+            end_time = time.time()  # 
             elapsed_ms = (end_time - start_time) * 1000
-            print(f"Czas przetwarzania: {elapsed_ms:.2f} ms")
+            print(f"Time: {elapsed_ms:.2f} ms")
+
             for client in connected_clients.copy():  
                 try:
                     await client.send_text(json_results)

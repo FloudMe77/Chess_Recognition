@@ -14,6 +14,7 @@ def shuffler(name):
 
     random.seed(42)
 
+    # create directories if they don't exist
     for split in ["train", "val", "test"]:
         (dataset_dir / "images" / split).mkdir(parents=True, exist_ok=True)
         (dataset_dir / "labels" / split).mkdir(parents=True, exist_ok=True)
@@ -26,6 +27,7 @@ def shuffler(name):
     n_val = int(n_total * val_ratio)
     n_test = n_total - n_train - n_val
 
+    # spliting into train, val, test
     splits = {
         "val": images[n_train:n_train + n_val],
         "test": images[n_train + n_val:]
@@ -35,13 +37,14 @@ def shuffler(name):
         for img_path in files:
             label_path = label_dir / (img_path.stem + ".txt")
 
+            # moving files to their new location
             shutil.copy(img_path, dataset_dir / "images" / split / img_path.name)
             os.remove(img_path)
             if label_path.exists():
                 shutil.copy(label_path, dataset_dir / "labels" / split / label_path.name)
                 os.remove(label_path)
 
-
+    # printing summary
     print(f"Division completed! The collection has:")
     print(f"- Train: {n_train} images")
     print(f"- Val:   {n_val} images")

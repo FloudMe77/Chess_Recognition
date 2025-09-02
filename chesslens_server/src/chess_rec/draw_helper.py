@@ -4,10 +4,11 @@ import matplotlib.pyplot as plt
 import os
 
 def draw_bboxes_on_image(image, bboxes, color=(0, 255, 0), thickness=2):
+        # Draw bounding boxes on the image
         h, w = image.shape[:2]
         for bbox in bboxes:
             pts = np.array(bbox, dtype=np.float32)[:2]
-            
+            ## if bbox on board
             if np.any((pts[:, 0] >= 0) & (pts[:, 0] <= w) &
                     (pts[:, 1] >= 0) & (pts[:, 1] <= h)):
 
@@ -54,7 +55,7 @@ def plot_bboxes(image_path, label_path):
                 cv2.putText(image, str(class_id), (x1, y1 - 5),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
     else:
-        print("Brak pliku labeli:", label_path)
+        print("lack of image:", label_path)
 
-    cv2.imshow("Obraz z labelami", image)
+    cv2.imshow("image with labels", image)
     plot_cv(image)

@@ -37,6 +37,7 @@ chesslens_server/video_test
 chesslens_server/YOLO_models
 chesslens_server/YOLO_original_models
 *.cashe
+!**/.gitkeep
 
 
 # ======================
