@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-//import androidx.compose.ui.Alignment
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,6 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import com.example.chessLens.utils.Move
 import com.example.chessLens.utils.PieceInfo
@@ -31,6 +33,7 @@ fun BoardContent(
     val highlightColorPreviousMove = Color(0x80FFD700)
     val highlightColorPotentialMove = Color(0x8033B5E5)
     Log.d("BoardContent", positionMap.toString())
+    val letters = listOf("a","b","c","d","e","f","g","h")
     // Container box for the board
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
@@ -96,6 +99,28 @@ fun BoardContent(
                                     painter = painterResource(imageResource),
                                     contentDescription = "${it.position} (${it.id})",
                                     modifier = rotationModifier
+                                )
+                            }
+                            //row number at the top (only in the first column)
+                            if (colIndex == 0) {
+                                Text(
+                                    text = (8 - rowIndex).toString(),
+                                    fontSize = 6.sp,
+                                    color = if (isLightSquare) darkSquareColor else lightSquareColor,
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(2.dp)
+                                )
+                            }
+                            //column letter at the bottom (only in the last row)
+                            if (rowIndex == 7) {
+                                Text(
+                                    text = letters[colIndex],
+                                    fontSize = 6.sp,
+                                    color = if (isLightSquare) darkSquareColor else lightSquareColor,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(2.dp)
                                 )
                             }
                         }

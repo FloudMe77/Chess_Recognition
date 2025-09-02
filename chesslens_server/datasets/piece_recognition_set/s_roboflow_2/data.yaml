@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 12
+names: ['black-bishop', 'black-rook', 'black-horse', 'black-king', 'black-pawn', 'black-queen', 'white-bishop', 'white-rook', 'white-horse', 'white-king', 'white-pawn', 'white-queen']
+
+roboflow:
+  workspace: tutorial-knlj8
+  project: chess-board-detection-uuppk
+  version: 4
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/tutorial-knlj8/chess-board-detection-uuppk/dataset/4

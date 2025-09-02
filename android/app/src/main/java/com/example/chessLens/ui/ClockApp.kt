@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -204,7 +204,7 @@ fun ClockApp(isCameraView: MutableState<Boolean>, viewModel: PositionViewModel) 
                         onClick = { isCameraView.value = !isCameraView.value },
                         modifier = Modifier.size(70.dp)
                     ) {
-                        Icon(Icons.Default.Settings, contentDescription = "Change mode")
+                        Icon(Icons.Default.Camera, contentDescription = "Change mode")
                     }
 
                 }

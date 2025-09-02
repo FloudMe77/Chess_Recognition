@@ -50,6 +50,7 @@ android {
 dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
     implementation("org.jsoup:jsoup:1.16.1")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
     // CameraX
     implementation("androidx.camera:camera-core:1.3.2")
     implementation("com.google.code.gson:gson:2.11.0")

@@ -28,21 +28,16 @@ build/
 *.db
 *.sqlite3
 
-# YOLO modele i wyniki
-*.pt
-*.onnx
-*.weights
-*.txt
-*.jpg
-*.png
-*.mp4
-runs/
-data/
-datasets/
-
 # pliki konfiguracyjne (nie commitujemy prywatnych)
 .env
-server/.env
+chesslens_server/.env
+chesslens_server/data/*
+chesslens_server/runs/*
+chesslens_server/video_test
+chesslens_server/YOLO_models
+chesslens_server/YOLO_original_models
+*.cashe
+
 
 # ======================
 # Android (android/)

@@ -10,10 +10,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewModule
+import androidx.compose.material.icons.filled.ViewQuilt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -79,6 +83,7 @@ private fun verticalDrawer(
                     .size(70.dp)
                     .padding(25.dp)
                     .background(if (isConnected) Color.Green else Color.Red, shape = CircleShape)
+                    .align(Alignment.CenterVertically)
             )
             // Chess board content
             BoardContent(
@@ -88,8 +93,13 @@ private fun verticalDrawer(
                 null
             )
             // Button to switch camera/board view
-            IconButton(onClick = { isCameraView.value = !isCameraView.value }, modifier = Modifier.size(70.dp)) {
-                Icon(Icons.Default.Settings, contentDescription = "Change mode")
+            IconButton(
+                onClick = { isCameraView.value = !isCameraView.value },
+                modifier = Modifier
+                    .size(70.dp)
+                    .align(Alignment.CenterVertically)
+            ) {
+                Icon(Icons.Default.Dashboard, contentDescription = "Change mode")
             }
         }
 
@@ -130,7 +140,7 @@ private fun horizontalDrawer(
             )
             // Button to switch camera/board view
             IconButton(onClick = { isCameraView.value = !isCameraView.value }, modifier = Modifier.size(70.dp)) {
-                Icon(Icons.Default.Settings, contentDescription = "Change mode")
+                Icon(Icons.Default.ViewModule, contentDescription = "Change mode")
             }
         }
 
