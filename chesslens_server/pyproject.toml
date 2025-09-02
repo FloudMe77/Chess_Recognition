@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "chess pieces recognition websocket server"
 authors = ["FloudMe77 <marecik.dariusz@gmail.com>"]
 packages = [{ include = "chess_rec", from = "src" }]
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11"

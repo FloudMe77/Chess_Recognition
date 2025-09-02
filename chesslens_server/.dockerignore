@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+data/
+datasets/
+video_test/
+YOLO_models/
+YOLO_original_models/
+runs/
